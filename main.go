@@ -2,11 +2,17 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/tls"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
 	"os"
+	"time"
 )
 
 type NodesJSON struct {
@@ -79,14 +85,60 @@ func main() {
 		fnipol.Children = append(fnipol.Children, fnip)
 		fmt.Printf("%q\n", fnip)
 	}
-	// fmt.Printf("%q\n", fnipol)
-	// for _, v := range fnipol.Children {
-	//         fmt.Println(v.Attributes)
-	// }
 	nj := NodesJSON{fnipol}
 	b, err := json.Marshal(nj)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	os.Stdout.Write(b)
+
+	t := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 10 * time.Second,
+		TLSClientConfig: &tls.Config{
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			},
+			PreferServerCipherSuites: true,
+			InsecureSkipVerify:       true,
+			MinVersion:               tls.VersionTLS11,
+			MaxVersion:               tls.VersionTLS11,
+		},
+	}
+
+	// loginUrl := "https://sandboxapicdc.cisco.com/api/aaaLogin.json"
+	// loginString := fmt.Sprintf(`{"aaaUser": {"attributes": {"name": "admin", "pwd": "ciscopsdt"}}}`)
+	// req, err := http.NewRequest("POST", loginUrl, bytes.NewBuffer([]byte(loginString)))
+	// req.Header.Set("Content-Type", "application/json")
+	//
+	// client := &http.Client{Transport: t}
+	// resp, err := client.Do(req)
+	// if err != nil {
+	//         log.Fatal(err)
+	// }
+	// defer resp.Body.Close()
+	//
+	// fmt.Println("response Status:", resp.Status)
+	// fmt.Println("response Headers:", resp.Header)
+	// body, _ := ioutil.ReadAll(resp.Body)
+	// fmt.Println("response Body:", string(body))
+
+	url := "https://sandboxapicdc.cisco.com/api/node/mo/uni/controller/nodeidentpol.json"
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(b))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Transport: t}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
 }
