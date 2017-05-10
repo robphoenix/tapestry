@@ -23,16 +23,6 @@ type NodeJSON struct {
 	FabricNodeIdentP FabricNodeIdentP `json:"fabricNodeIdentP"`
 }
 
-type AuthJSON struct {
-	Imdata []struct {
-		AaaLogin struct {
-			Attributes struct {
-				Token string `json:"token"`
-			} `json:"attributes"`
-		} `json:"aaaLogin"`
-	} `json:"imdata"`
-}
-
 type FabricNodeIdentPol struct {
 	Attributes Attributes `json:"attributes"`
 	Children   []NodeJSON `json:"children"`
@@ -89,7 +79,8 @@ func main() {
 					NodeID: n["Node ID"],
 					Role:   n["Role"],
 					Serial: n["Serial"],
-					Status: "created,modified",
+					// Status: "created,modified",
+					Status: "deleted",
 				},
 			}}
 		fnipol.Children = append(fnipol.Children, fnip)
