@@ -15,19 +15,23 @@ import (
 	"time"
 )
 
+// NodesJSON ...
 type NodesJSON struct {
 	FabricNodeIdentPol FabricNodeIdentPol `json:"fabricNodeIdentPol"`
 }
 
+// NodeJSON ...
 type NodeJSON struct {
 	FabricNodeIdentP FabricNodeIdentP `json:"fabricNodeIdentP"`
 }
 
+// FabricNodeIdentPol ...
 type FabricNodeIdentPol struct {
 	Attributes Attributes `json:"attributes"`
 	Children   []NodeJSON `json:"children"`
 }
 
+// Attributes ...
 type Attributes struct {
 	Name   string `json:"name,omitempty"`
 	NodeID string `json:"nodeId,omitempty"`
@@ -36,27 +40,60 @@ type Attributes struct {
 	Status string `json:"status,omitempty"`
 }
 
+// FabricNodeIdentP ...
 type FabricNodeIdentP struct {
 	Attributes Attributes `json:"attributes"`
 }
 
+type GetNodes struct {
+	Imdata []struct {
+		FabricNode struct {
+			Attributes struct {
+				AdSt             string `json:"adSt"`
+				ChildAction      string `json:"childAction"`
+				DelayedHeartbeat string `json:"delayedHeartbeat"`
+				Dn               string `json:"dn"`
+				FabricSt         string `json:"fabricSt"`
+				ID               string `json:"id"`
+				LcOwn            string `json:"lcOwn"`
+				ModTs            string `json:"modTs"`
+				Model            string `json:"model"`
+				MonPolDn         string `json:"monPolDn"`
+				Name             string `json:"name"`
+				NameAlias        string `json:"nameAlias"`
+				Role             string `json:"role"`
+				Serial           string `json:"serial"`
+				Status           string `json:"status"`
+				UID              string `json:"uid"`
+				Vendor           string `json:"vendor"`
+				Version          string `json:"version"`
+			} `json:"attributes"`
+		} `json:"fabricNode"`
+	} `json:"imdata"`
+	TotalCount string `json:"totalCount"`
+}
+
 func main() {
+	// read in CSV data
 	csvFile, err := os.Open(".data/fabric_membership.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
 	reader := csv.NewReader(bufio.NewReader(csvFile))
+	// headers
 	headers, err := reader.Read()
 	if err != nil {
 		log.Fatal(err)
 	}
+	// records
 	records, err := reader.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// build a slice of nodes, a node is a map of headers to records
+	// struct??
 	var nodes []map[string]string
-
 	for _, r := range records {
 		node := make(map[string]string, len(headers))
 		for i := 0; i < len(headers); i++ {
@@ -66,11 +103,13 @@ func main() {
 	}
 	// fmt.Printf("%v\n", nodes)
 
+	// instantiate a nodes struct
 	fnipol := FabricNodeIdentPol{
 		Attributes: Attributes{
 			Status: "created,modified",
 		},
 	}
+	// add individual nodes to the nodes struct
 	for _, n := range nodes {
 		fnip := NodeJSON{
 			FabricNodeIdentP: FabricNodeIdentP{
@@ -79,7 +118,9 @@ func main() {
 					NodeID: n["Node ID"],
 					Role:   n["Role"],
 					Serial: n["Serial"],
+					// create the node
 					// Status: "created,modified",
+					// delete the node
 					Status: "deleted",
 				},
 			}}
@@ -87,11 +128,14 @@ func main() {
 		// fmt.Printf("%q\n", fnip)
 	}
 	nj := NodesJSON{fnipol}
+	// marshal the struct into  JSON
 	b, err := json.Marshal(nj)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
 
+	// TLS config
+	// https://stackoverflow.com/questions/41250665/go-https-client-issue-remote-error-tls-handshake-failure#
 	t := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		Dial: (&net.Dialer{
@@ -111,6 +155,7 @@ func main() {
 		},
 	}
 
+	// login
 	loginURL := "https://sandboxapicdc.cisco.com/api/aaaLogin.json"
 	loginString := fmt.Sprintf(`{"aaaUser": {"attributes": {"name": "admin", "pwd": "ciscopsdt"}}}`)
 	req, err := http.NewRequest("POST", loginURL, bytes.NewBuffer([]byte(loginString)))
@@ -118,6 +163,7 @@ func main() {
 
 	client := &http.Client{Transport: t}
 	resp, err := client.Do(req)
+	// get auth cookie
 	cookies := resp.Cookies()
 	apicCookie := cookies[0]
 	token := apicCookie.Value
@@ -131,9 +177,10 @@ func main() {
 
 	fmt.Println("response Status:", resp.Status)
 	// fmt.Println("response Headers:", resp.Header)
-	loginBody, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(loginBody))
+	// loginBody, _ := ioutil.ReadAll(resp.Body)
+	// fmt.Println("response Body:", string(loginBody))
 
+	// nodes endpoint
 	NodesURL := "https://sandboxapicdc.cisco.com/api/node/mo/uni/controller/nodeidentpol.json"
 	req, err = http.NewRequest("POST", NodesURL, bytes.NewBuffer(b))
 	req.Header.Set("Content-Type", "application/json")
@@ -149,4 +196,9 @@ func main() {
 	fmt.Println("response Headers:", resp.Header)
 	nodesBody, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println("response Body:", string(nodesBody))
+}
+
+func getNodes() {
+	URL := "https://sandboxapicdc.cisco.com/api/node/class/fabricNode.json"
+	fmt.Printf("URL = %+v\n", URL)
 }
