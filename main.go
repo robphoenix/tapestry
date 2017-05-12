@@ -3,16 +3,15 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"crypto/tls"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
-	"time"
+
+	"github.com/robphoenix/go-aci/aci"
 )
 
 // NodesJSON ...
@@ -45,6 +44,7 @@ type FabricNodeIdentP struct {
 	Attributes Attributes `json:"attributes"`
 }
 
+// GetNodes ...
 type GetNodes struct {
 	Imdata []struct {
 		FabricNode struct {
@@ -74,6 +74,12 @@ type GetNodes struct {
 }
 
 func main() {
+
+	apicClient, err := aci.NewClient("https://sandboxapicdc.cisco.com/", "admin", "ciscopsdt")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// read in CSV data
 	csvFile, err := os.Open(".data/fabric_membership.csv")
 	if err != nil {
@@ -119,57 +125,34 @@ func main() {
 					Role:   n["Role"],
 					Serial: n["Serial"],
 					// create the node
-					// Status: "created,modified",
+					Status: "created,modified",
 					// delete the node
-					Status: "deleted",
+					// Status: "deleted",
 				},
 			}}
 		fnipol.Children = append(fnipol.Children, fnip)
 		// fmt.Printf("%q\n", fnip)
 	}
 	nj := NodesJSON{fnipol}
-	// marshal the struct into  JSON
+	// marshal the struct into JSON
 	b, err := json.Marshal(nj)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
 
-	// TLS config
-	// https://stackoverflow.com/questions/41250665/go-https-client-issue-remote-error-tls-handshake-failure#
-	t := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
-		TLSClientConfig: &tls.Config{
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			},
-			PreferServerCipherSuites: true,
-			InsecureSkipVerify:       true,
-			MinVersion:               tls.VersionTLS11,
-			MaxVersion:               tls.VersionTLS11,
-		},
+	// login
+	err = apicClient.Login()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// login
-	loginURL := "https://sandboxapicdc.cisco.com/api/aaaLogin.json"
-	loginString := fmt.Sprintf(`{"aaaUser": {"attributes": {"name": "admin", "pwd": "ciscopsdt"}}}`)
-	req, err := http.NewRequest("POST", loginURL, bytes.NewBuffer([]byte(loginString)))
+	// nodes endpoint
+	NodesURL := "https://sandboxapicdc.cisco.com/api/node/mo/uni/controller/nodeidentpol.json"
+	req, err := http.NewRequest("POST", NodesURL, bytes.NewBuffer(b))
 	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Transport: t}
+	req.Header.Set("Cookie", apicClient.Cookie)
+	client := apicClient.Client
 	resp, err := client.Do(req)
-	// get auth cookie
-	cookies := resp.Cookies()
-	apicCookie := cookies[0]
-	token := apicCookie.Value
-	tokenName := apicCookie.Name
-	fmt.Println("Token: ", token)
-	fmt.Println("Token Name: ", tokenName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,15 +160,16 @@ func main() {
 
 	fmt.Println("response Status:", resp.Status)
 	// fmt.Println("response Headers:", resp.Header)
-	// loginBody, _ := ioutil.ReadAll(resp.Body)
-	// fmt.Println("response Body:", string(loginBody))
+	nodesBody, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(nodesBody))
 
-	// nodes endpoint
-	NodesURL := "https://sandboxapicdc.cisco.com/api/node/mo/uni/controller/nodeidentpol.json"
-	req, err = http.NewRequest("POST", NodesURL, bytes.NewBuffer(b))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Cookie", apicCookie.String())
-	client = &http.Client{Transport: t}
+	// client = &http.Client{Transport: T}
+	URL := "https://sandboxapicdc.cisco.com/api/node/class/fabricNode.json"
+	req, err = http.NewRequest("GET", URL, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Cookie", apicClient.Cookie)
 	resp, err = client.Do(req)
 	if err != nil {
 		log.Fatal(err)
@@ -193,12 +177,14 @@ func main() {
 	defer resp.Body.Close()
 
 	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	nodesBody, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(nodesBody))
-}
-
-func getNodes() {
-	URL := "https://sandboxapicdc.cisco.com/api/node/class/fabricNode.json"
-	fmt.Printf("URL = %+v\n", URL)
+	nodesList, _ := ioutil.ReadAll(resp.Body)
+	var n GetNodes
+	err = json.NewDecoder(bytes.NewReader(nodesList)).Decode(&n)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Println("response Body:", string(nodesList))
+	for _, node := range n.Imdata {
+		fmt.Printf("Name = %+v\n", node.FabricNode.Attributes.Name)
+	}
 }
