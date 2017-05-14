@@ -16,61 +16,59 @@ import (
 
 // NodesJSON ...
 type NodesJSON struct {
-	FabricNodeIdentPol FabricNodeIdentPol `json:"fabricNodeIdentPol"`
+	FabricNodeIdentPol `json:"fabricNodeIdentPol"`
 }
 
 // NodeJSON ...
 type NodeJSON struct {
-	FabricNodeIdentP FabricNodeIdentP `json:"fabricNodeIdentP"`
+	FabricNodeIdentP `json:"fabricNodeIdentP"`
 }
 
 // FabricNodeIdentPol ...
 type FabricNodeIdentPol struct {
-	Attributes Attributes `json:"attributes"`
+	Attributes `json:"attributes"`
 	Children   []NodeJSON `json:"children"`
 }
 
 // Attributes ...
 type Attributes struct {
-	Name   string `json:"name,omitempty"`
-	NodeID string `json:"nodeId,omitempty"`
-	Role   string `json:"role,omitempty"`
-	Serial string `json:"serial,omitempty"`
-	Status string `json:"status,omitempty"`
+	Name             string `json:"name,omitempty"`
+	NodeID           string `json:"nodeId,omitempty"`
+	Role             string `json:"role,omitempty"`
+	Serial           string `json:"serial,omitempty"`
+	Status           string `json:"status,omitempty"`
+	AdSt             string `json:"adSt,omitempty"`
+	ChildAction      string `json:"childAction,omitempty"`
+	DelayedHeartbeat string `json:"delayedHeartbeat,omitempty"`
+	Dn               string `json:"dn,omitempty"`
+	FabricSt         string `json:"fabricSt,omitempty"`
+	ID               string `json:"id,omitempty"`
+	LcOwn            string `json:"lcOwn,omitempty"`
+	ModTs            string `json:"modTs,omitempty"`
+	Model            string `json:"model,omitempty"`
+	MonPolDn         string `json:"monPolDn,omitempty"`
+	NameAlias        string `json:"nameAlias,omitempty"`
+	UID              string `json:"uid,omitempty"`
+	Vendor           string `json:"vendor,omitempty"`
+	Version          string `json:"version,omitempty"`
 }
 
 // FabricNodeIdentP ...
 type FabricNodeIdentP struct {
-	Attributes Attributes `json:"attributes"`
+	Attributes `json:"attributes"`
 }
 
 // GetNodes ...
 type GetNodes struct {
 	Imdata []struct {
-		FabricNode struct {
-			Attributes struct {
-				AdSt             string `json:"adSt"`
-				ChildAction      string `json:"childAction"`
-				DelayedHeartbeat string `json:"delayedHeartbeat"`
-				Dn               string `json:"dn"`
-				FabricSt         string `json:"fabricSt"`
-				ID               string `json:"id"`
-				LcOwn            string `json:"lcOwn"`
-				ModTs            string `json:"modTs"`
-				Model            string `json:"model"`
-				MonPolDn         string `json:"monPolDn"`
-				Name             string `json:"name"`
-				NameAlias        string `json:"nameAlias"`
-				Role             string `json:"role"`
-				Serial           string `json:"serial"`
-				Status           string `json:"status"`
-				UID              string `json:"uid"`
-				Vendor           string `json:"vendor"`
-				Version          string `json:"version"`
-			} `json:"attributes"`
-		} `json:"fabricNode"`
+		FabricNode `json:"fabricNode"`
 	} `json:"imdata"`
 	TotalCount string `json:"totalCount"`
+}
+
+// FabricNode ...
+type FabricNode struct {
+	Attributes `json:"attributes"`
 }
 
 func main() {
@@ -185,6 +183,6 @@ func main() {
 	}
 	// fmt.Println("response Body:", string(nodesList))
 	for _, node := range n.Imdata {
-		fmt.Printf("Name = %+v\n", node.FabricNode.Attributes.Name)
+		fmt.Printf("Name = %+v\n", node.Name)
 	}
 }
