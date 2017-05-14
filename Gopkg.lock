@@ -4,4 +4,4 @@ memo = "c4479edd877963b5b4dad35f5242ad3e35b7869812a168a5c059301dfa999b75"
   branch = "master"
   name = "github.com/robphoenix/go-aci"
   packages = ["aci"]
-  revision = "05402d956a2e588835c90f21d0ee55608ba43fa9"
+  revision = "dfd8fece4182190cba85c424ec868271a1f429da"
