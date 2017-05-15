@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/robphoenix/go-aci/aci"
+	"github.com/robphoenix/tapestry/cmd"
 )
 
 // NodesJSON ...
@@ -72,6 +73,8 @@ type FabricNode struct {
 }
 
 func main() {
+
+	cmd.Execute()
 
 	apicClient, err := aci.NewClient("https://sandboxapicdc.cisco.com/", "admin", "ciscopsdt")
 	if err != nil {
