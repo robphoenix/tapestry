@@ -10,9 +10,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
+	"github.com/pelletier/go-toml"
 	"github.com/robphoenix/go-aci/aci"
-	"github.com/robphoenix/tapestry/cmd"
 )
 
 // NodesJSON ...
@@ -74,15 +75,25 @@ type FabricNode struct {
 
 func main() {
 
-	cmd.Execute()
+	// cmd.Execute()
+	config, err := toml.LoadFile("tapestry.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	user := config.Get("apic.username").(string)
+	password := config.Get("apic.password").(string)
+	url := config.Get("apic.url").(string)
+	dataSrc := config.Get("data.src").(string)
+	fabricNodeSrc := config.Get("fabricNodes.src").(string)
 
-	apicClient, err := aci.NewClient("https://sandboxapicdc.cisco.com/", "admin", "ciscopsdt")
+	apicClient, err := aci.NewClient(url, user, password)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// read in CSV data
-	csvFile, err := os.Open(".data/fabric_membership.csv")
+	fabricNodesDataFile := filepath.Join(dataSrc, fabricNodeSrc)
+	csvFile, err := os.Open(fabricNodesDataFile)
 	if err != nil {
 		log.Fatal(err)
 	}
