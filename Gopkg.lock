@@ -1,7 +1,0 @@
-memo = "c4479edd877963b5b4dad35f5242ad3e35b7869812a168a5c059301dfa999b75"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/robphoenix/go-aci"
-  packages = ["aci"]
-  revision = "dfd8fece4182190cba85c424ec868271a1f429da"
