@@ -16,20 +16,12 @@ import (
 	"github.com/robphoenix/go-aci/aci"
 )
 
-// NodesJSON ...
-type NodesJSON struct {
-	FabricNodeIdentPol `json:"fabricNodeIdentPol"`
-}
-
-// NodeJSON ...
-type NodeJSON struct {
-	FabricNodeIdentP `json:"fabricNodeIdentP"`
-}
-
-// FabricNodeIdentPol ...
-type FabricNodeIdentPol struct {
-	Attributes `json:"attributes"`
-	Children   []NodeJSON `json:"children"`
+// GetNodes ...
+type GetNodes struct {
+	Imdata []struct {
+		FabricNode `json:"fabricNode"`
+	} `json:"imdata"`
+	TotalCount string `json:"totalCount"`
 }
 
 // Attributes ...
@@ -53,19 +45,6 @@ type Attributes struct {
 	UID              string `json:"uid,omitempty"`
 	Vendor           string `json:"vendor,omitempty"`
 	Version          string `json:"version,omitempty"`
-}
-
-// FabricNodeIdentP ...
-type FabricNodeIdentP struct {
-	Attributes `json:"attributes"`
-}
-
-// GetNodes ...
-type GetNodes struct {
-	Imdata []struct {
-		FabricNode `json:"fabricNode"`
-	} `json:"imdata"`
-	TotalCount string `json:"totalCount"`
 }
 
 // FabricNode ...
@@ -119,37 +98,16 @@ func main() {
 		}
 		nodes = append(nodes, node)
 	}
-	// fmt.Printf("%v\n", nodes)
 
-	// instantiate a nodes struct
-	fnipol := FabricNodeIdentPol{
-		Attributes: Attributes{
-			Status: "created,modified",
-		},
-	}
-	// add individual nodes to the nodes struct
-	for _, n := range nodes {
-		fnip := NodeJSON{
-			FabricNodeIdentP: FabricNodeIdentP{
-				Attributes: Attributes{
-					Name:   n["Name"],
-					NodeID: n["Node ID"],
-					Role:   n["Role"],
-					Serial: n["Serial"],
-					// create the node
-					Status: "created,modified",
-					// delete the node
-					// Status: "deleted",
-				},
-			}}
-		fnipol.Children = append(fnipol.Children, fnip)
-		// fmt.Printf("%q\n", fnip)
-	}
-	nj := NodesJSON{fnipol}
-	// marshal the struct into JSON
-	b, err := json.Marshal(nj)
-	if err != nil {
-		fmt.Println("error:", err)
+	var ns []aci.Node
+	for _, node := range nodes {
+		n := aci.Node{
+			Name:   node["Name"],
+			ID:     node["Node ID"],
+			Role:   node["Role"],
+			Serial: node["Serial"],
+		}
+		ns = append(ns, n)
 	}
 
 	// login
@@ -158,31 +116,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// nodes endpoint
-	NodesURL := "https://sandboxapicdc.cisco.com/api/node/mo/uni/controller/nodeidentpol.json"
-	req, err := http.NewRequest("POST", NodesURL, bytes.NewBuffer(b))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Cookie", apicClient.Cookie)
-	client := apicClient.Client
-	resp, err := client.Do(req)
+	// add nodes
+	err = apicClient.AddNodes(ns)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	// fmt.Println("response Headers:", resp.Header)
-	nodesBody, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(nodesBody))
-
-	// client = &http.Client{Transport: T}
+	// list nodes
 	URL := "https://sandboxapicdc.cisco.com/api/node/class/fabricNode.json"
-	req, err = http.NewRequest("GET", URL, nil)
+	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	req.Header.Set("Cookie", apicClient.Cookie)
-	resp, err = client.Do(req)
+	resp, err := apicClient.Client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -196,6 +143,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// fmt.Println("response Body:", string(nodesList))
+	// fmt.Printf("%#v\n", n)
 	for _, node := range n.Imdata {
 		fmt.Printf("Name = %+v\n", node.Name)
 	}

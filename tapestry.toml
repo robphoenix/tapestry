@@ -1,4 +1,10 @@
 [apic]
-url = "https://sandboxapicdc.cisco.com"
+url = "sandboxapicdc.cisco.com"
 username = "admin"
 password = "ciscopsdt"
+
+[data]
+src = ".data"
+
+[fabricNodes]
+src = "fabric_membership.csv"
