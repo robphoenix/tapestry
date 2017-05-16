@@ -68,7 +68,6 @@ func main() {
 		}
 		ns = append(ns, n)
 	}
-	// fmt.Printf("ns = %+v\n", ns)
 
 	// login
 	err = apicClient.Login()
@@ -90,11 +89,13 @@ func main() {
 
 	// list nodes
 	n, err := apicClient.ListNodes()
-	fmt.Printf("%#v\n", n)
-	for _, node := range n.Imdata {
+	// fmt.Printf("%#v\n", n)
+	for _, node := range n {
+		fmt.Printf("node is an %T type\n", node)
 		fmt.Printf("Name = %+v\n", node.Name)
 		fmt.Printf("ID = %+v\n", node.ID)
 		fmt.Printf("Serial = %+v\n", node.Serial)
-		fmt.Printf("fabric status = %+v\n", node.FabricSt)
+		fmt.Printf("fabric status = %+v\n", node.FabricStatus)
+		fmt.Printf("node.Status = %+v\n", node.Status)
 	}
 }
