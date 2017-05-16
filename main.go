@@ -2,55 +2,15 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/pelletier/go-toml"
 	"github.com/robphoenix/go-aci/aci"
 )
-
-// GetNodes ...
-type GetNodes struct {
-	Imdata []struct {
-		FabricNode `json:"fabricNode"`
-	} `json:"imdata"`
-	TotalCount string `json:"totalCount"`
-}
-
-// Attributes ...
-type Attributes struct {
-	Name             string `json:"name,omitempty"`
-	NodeID           string `json:"nodeId,omitempty"`
-	Role             string `json:"role,omitempty"`
-	Serial           string `json:"serial,omitempty"`
-	Status           string `json:"status,omitempty"`
-	AdSt             string `json:"adSt,omitempty"`
-	ChildAction      string `json:"childAction,omitempty"`
-	DelayedHeartbeat string `json:"delayedHeartbeat,omitempty"`
-	Dn               string `json:"dn,omitempty"`
-	FabricSt         string `json:"fabricSt,omitempty"`
-	ID               string `json:"id,omitempty"`
-	LcOwn            string `json:"lcOwn,omitempty"`
-	ModTs            string `json:"modTs,omitempty"`
-	Model            string `json:"model,omitempty"`
-	MonPolDn         string `json:"monPolDn,omitempty"`
-	NameAlias        string `json:"nameAlias,omitempty"`
-	UID              string `json:"uid,omitempty"`
-	Vendor           string `json:"vendor,omitempty"`
-	Version          string `json:"version,omitempty"`
-}
-
-// FabricNode ...
-type FabricNode struct {
-	Attributes `json:"attributes"`
-}
 
 func main() {
 
@@ -104,11 +64,11 @@ func main() {
 		n := aci.Node{
 			Name:   node["Name"],
 			ID:     node["Node ID"],
-			Role:   node["Role"],
 			Serial: node["Serial"],
 		}
 		ns = append(ns, n)
 	}
+	// fmt.Printf("ns = %+v\n", ns)
 
 	// login
 	err = apicClient.Login()
@@ -122,29 +82,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// list nodes
-	URL := "https://sandboxapicdc.cisco.com/api/node/class/fabricNode.json"
-	req, err := http.NewRequest("GET", URL, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Set("Cookie", apicClient.Cookie)
-	resp, err := apicClient.Client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
+	// // delete nodes
+	// err = apicClient.DeleteNodes(ns)
+	// if err != nil {
+	//         log.Fatal(err)
+	// }
 
-	fmt.Println("response Status:", resp.Status)
-	nodesList, _ := ioutil.ReadAll(resp.Body)
-	var n GetNodes
-	err = json.NewDecoder(bytes.NewReader(nodesList)).Decode(&n)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// fmt.Println("response Body:", string(nodesList))
-	// fmt.Printf("%#v\n", n)
+	// list nodes
+	n, err := apicClient.ListNodes()
+	fmt.Printf("%#v\n", n)
 	for _, node := range n.Imdata {
 		fmt.Printf("Name = %+v\n", node.Name)
+		fmt.Printf("ID = %+v\n", node.ID)
+		fmt.Printf("Serial = %+v\n", node.Serial)
+		fmt.Printf("fabric status = %+v\n", node.FabricSt)
 	}
 }
