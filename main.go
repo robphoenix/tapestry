@@ -27,6 +27,12 @@ type node struct {
 	Role   string `csv:"Role"`
 }
 
+type nodesActions struct {
+	add    []aci.Node
+	modify []aci.Node
+	delete []aci.Node
+}
+
 func main() {
 
 	// cmd.Execute()
@@ -50,14 +56,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var ns []aci.Node
+	// determine desired node state
+	var desiredNodeState []aci.Node
 	for _, node := range nodes {
 		n := aci.Node{
 			Name:   node.Name,
 			ID:     node.NodeID,
 			Serial: node.Serial,
 		}
-		ns = append(ns, n)
+		desiredNodeState = append(desiredNodeState, n)
 	}
 
 	// login
@@ -66,25 +73,31 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// determine actual node state
+	actualNodeState, err := apicClient.ListNodes()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	na := diffNodeStates(desiredNodeState, actualNodeState)
+	fmt.Printf("na.add = %+v\n", na.add)
+	fmt.Printf("na.delete = %+v\n", na.delete)
+	fmt.Printf("na.modify = %+v\n", na.modify)
+
 	// // add nodes
-	// err = apicClient.AddNodes(ns)
+	// err = apicClient.AddNodes(desiredNodeState)
 	// if err != nil {
 	//         log.Fatal(err)
 	// }
 
 	// // delete nodes
-	// err = apicClient.DeleteNodes(ns)
+	// err = apicClient.DeleteNodes(desiredNodeState)
 	// if err != nil {
 	//         log.Fatal(err)
 	// }
 
 	// list nodes
-	n, err := apicClient.ListNodes()
-	if err != nil {
-		fmt.Println("here")
-		log.Fatal(err)
-	}
-	for _, node := range n {
+	for _, node := range actualNodeState {
 		// fmt.Printf("node = %+v\n", node)
 		fmt.Printf("Name = %+v\n", node.Name)
 		// fmt.Printf("ID = %+v\n", node.ID)
@@ -125,4 +138,46 @@ func newNodes(nodesFile string) ([]node, error) {
 		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
 	}
 	return nodes, nil
+}
+
+// diffNodeStates determines which nodes need to be added, deleted or modified
+func diffNodeStates(desired []aci.Node, actual []aci.Node) nodesActions {
+	dm := structMap(desired)
+	am := structMap(actual)
+	var na nodesActions
+
+	// add
+	for k, v := range dm {
+		_, ok := am[k]
+		if !ok {
+			na.add = append(na.add, v)
+		}
+	}
+	// delete
+	for k, v := range am {
+		_, ok := dm[k]
+		if !ok {
+			na.delete = append(na.delete, v)
+		}
+	}
+	// modify
+	for k, dv := range dm {
+		av, ok := am[k]
+		if ok {
+			if dv.Name != av.Name || dv.ID != av.ID {
+				na.modify = append(na.modify, dv)
+			}
+		}
+	}
+	return na
+}
+
+// structMap builds a hash map of nodes
+// indexed by Serial number
+func structMap(ns []aci.Node) map[string]aci.Node {
+	m := make(map[string]aci.Node, len(ns))
+	for _, n := range ns {
+		m[n.Serial] = n
+	}
+	return m
 }
