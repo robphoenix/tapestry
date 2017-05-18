@@ -80,21 +80,27 @@ func main() {
 	}
 
 	na := diffNodeStates(desiredNodeState, actualNodeState)
-	fmt.Printf("na.add = %+v\n", na.add)
-	fmt.Printf("na.delete = %+v\n", na.delete)
-	fmt.Printf("na.modify = %+v\n", na.modify)
 
-	// // add nodes
-	// err = apicClient.AddNodes(desiredNodeState)
-	// if err != nil {
-	//         log.Fatal(err)
-	// }
+	// add nodes
+	log.Printf("adding %d nodes", len(na.add))
+	err = apicClient.AddNodes(na.add)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// // delete nodes
-	// err = apicClient.DeleteNodes(desiredNodeState)
-	// if err != nil {
-	//         log.Fatal(err)
-	// }
+	// delete nodes
+	log.Printf("deleting %d nodes", len(na.delete))
+	err = apicClient.DeleteNodes(na.delete)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// modify nodes
+	log.Printf("modifying %d nodes", len(na.modify))
+	err = apicClient.ModifyNodes(na.modify)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// list nodes
 	for _, node := range actualNodeState {
