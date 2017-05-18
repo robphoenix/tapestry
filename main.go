@@ -12,26 +12,32 @@ import (
 	"github.com/robphoenix/go-aci/aci"
 )
 
+type config struct {
+	url           string
+	user          string
+	password      string
+	dataSrc       string
+	fabricNodeSrc string
+}
+
 func main() {
 
 	// cmd.Execute()
-	config, err := toml.LoadFile("tapestry.toml")
+
+	// fetch configuration data
+	conf, err := newConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
-	user := config.Get("apic.username").(string)
-	password := config.Get("apic.password").(string)
-	url := config.Get("apic.url").(string)
-	dataSrc := config.Get("data.src").(string)
-	fabricNodeSrc := config.Get("fabricNodes.src").(string)
 
-	apicClient, err := aci.NewClient(url, user, password)
+	// create new APIC client
+	apicClient, err := aci.NewClient(conf.url, conf.user, conf.password)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// read in CSV data
-	fabricNodesDataFile := filepath.Join(dataSrc, fabricNodeSrc)
+	fabricNodesDataFile := filepath.Join(conf.dataSrc, conf.fabricNodeSrc)
 	csvFile, err := os.Open(fabricNodesDataFile)
 	if err != nil {
 		log.Fatal(err)
@@ -75,11 +81,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// add nodes
-	err = apicClient.AddNodes(ns)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// // add nodes
+	// err = apicClient.AddNodes(ns)
+	// if err != nil {
+	//         log.Fatal(err)
+	// }
 
 	// // delete nodes
 	// err = apicClient.DeleteNodes(ns)
@@ -89,13 +95,32 @@ func main() {
 
 	// list nodes
 	n, err := apicClient.ListNodes()
-	// fmt.Printf("%#v\n", n)
-	for _, node := range n {
-		fmt.Printf("node is an %T type\n", node)
-		fmt.Printf("Name = %+v\n", node.Name)
-		fmt.Printf("ID = %+v\n", node.ID)
-		fmt.Printf("Serial = %+v\n", node.Serial)
-		fmt.Printf("fabric status = %+v\n", node.FabricStatus)
-		fmt.Printf("node.Status = %+v\n", node.Status)
+	if err != nil {
+		fmt.Println("here")
+		log.Fatal(err)
 	}
+	for _, node := range n {
+		// fmt.Printf("node = %+v\n", node)
+		fmt.Printf("Name = %+v\n", node.Name)
+		// fmt.Printf("ID = %+v\n", node.ID)
+		// fmt.Printf("Serial = %+v\n", node.Serial)
+		// fmt.Printf("fabric status = %+v\n", node.FabricStatus)
+		// fmt.Printf("node.Status = %+v\n", node.Status)
+	}
+}
+
+// newConfig fetches data from the tapestry configuration file
+func newConfig() (*config, error) {
+	configFile := "tapestry.toml"
+	c, err := toml.LoadFile(configFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load %s config file: %v", configFile, err)
+	}
+	return &config{
+		user:          c.Get("apic.username").(string),
+		password:      c.Get("apic.password").(string),
+		url:           c.Get("apic.url").(string),
+		dataSrc:       c.Get("data.src").(string),
+		fabricNodeSrc: c.Get("fabricNodes.src").(string),
+	}, nil
 }
