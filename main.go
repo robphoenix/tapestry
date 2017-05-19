@@ -29,7 +29,6 @@ type node struct {
 
 type nodesActions struct {
 	add    []aci.Node
-	modify []aci.Node
 	delete []aci.Node
 }
 
@@ -79,37 +78,50 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// determine actions to take
 	na := diffNodeStates(desiredNodeState, actualNodeState)
 
-	// add nodes
-	log.Printf("adding %d nodes", len(na.add))
-	err = apicClient.AddNodes(na.add)
-	if err != nil {
-		log.Fatal(err)
+	fmt.Printf("%s\n", "Nodes to add:")
+	for _, v := range na.add {
+		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+	}
+	fmt.Printf("%s\n", "Nodes to delete:")
+	for _, v := range na.delete {
+		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 	}
 
 	// delete nodes
-	log.Printf("deleting %d nodes", len(na.delete))
 	err = apicClient.DeleteNodes(na.delete)
 	if err != nil {
 		log.Fatal(err)
 	}
+	if err == nil {
+		fmt.Printf("%s\n", "Nodes deleted:")
+		for _, v := range na.delete {
+			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		}
+	}
 
-	// modify nodes
-	log.Printf("modifying %d nodes", len(na.modify))
-	err = apicClient.ModifyNodes(na.modify)
+	// add nodes
+	err = apicClient.AddNodes(na.add)
 	if err != nil {
 		log.Fatal(err)
 	}
+	if err == nil {
+		fmt.Printf("%s\n", "Nodes added:")
+		for _, v := range na.add {
+			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		}
+	}
 
-	// list nodes
-	for _, node := range actualNodeState {
-		// fmt.Printf("node = %+v\n", node)
-		fmt.Printf("Name = %+v\n", node.Name)
-		// fmt.Printf("ID = %+v\n", node.ID)
-		// fmt.Printf("Serial = %+v\n", node.Serial)
-		// fmt.Printf("fabric status = %+v\n", node.FabricStatus)
-		// fmt.Printf("node.Status = %+v\n", node.Status)
+	// determine new node state
+	newNodeState, err := apicClient.ListNodes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s\n", "Current Nodes:")
+	for _, v := range newNodeState {
+		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 	}
 }
 
@@ -153,26 +165,17 @@ func diffNodeStates(desired []aci.Node, actual []aci.Node) nodesActions {
 	var na nodesActions
 
 	// add
-	for k, v := range dm {
+	for k, dv := range dm {
 		_, ok := am[k]
 		if !ok {
-			na.add = append(na.add, v)
+			na.add = append(na.add, dv)
 		}
 	}
 	// delete
-	for k, v := range am {
+	for k, av := range am {
 		_, ok := dm[k]
 		if !ok {
-			na.delete = append(na.delete, v)
-		}
-	}
-	// modify
-	for k, dv := range dm {
-		av, ok := am[k]
-		if ok {
-			if dv.Name != av.Name || dv.ID != av.ID {
-				na.modify = append(na.modify, dv)
-			}
+			na.delete = append(na.delete, av)
 		}
 	}
 	return na
@@ -183,7 +186,8 @@ func diffNodeStates(desired []aci.Node, actual []aci.Node) nodesActions {
 func structMap(ns []aci.Node) map[string]aci.Node {
 	m := make(map[string]aci.Node, len(ns))
 	for _, n := range ns {
-		m[n.Serial] = n
+		key := n.Serial + n.ID + n.Name
+		m[key] = n
 	}
 	return m
 }
