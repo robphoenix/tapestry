@@ -34,8 +34,8 @@ func structMap(ns []aci.Node) map[string]aci.Node {
 	return m
 }
 
-// diffNodeStates determines which nodes need to be added, deleted or modified
-func diffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
+// DiffNodeStates determines which nodes need to be added, deleted or modified
+func DiffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
 	dm := structMap(desired)
 	am := structMap(actual)
 	var na NodesActions
@@ -57,8 +57,8 @@ func diffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
 	return na
 }
 
-// newNodes fetches fabric membership data from file
-func newNodes(nodesFile string) ([]Node, error) {
+// NewNodes fetches fabric membership data from file
+func NewNodes(nodesFile string) ([]Node, error) {
 	csvFile, err := os.Open(nodesFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open %s: %v", nodesFile, err)

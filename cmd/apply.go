@@ -15,7 +15,11 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"path/filepath"
 
+	"github.com/robphoenix/go-aci/aci"
+	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +34,74 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("apply called")
+		// fetch configuration data
+		conf, err := tapestry.NewConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// create new APIC client
+		apicClient, err := aci.NewClient(conf.URL, conf.User, conf.Password)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// read in data from fabric membership file
+		fabricNodesDataFile := filepath.Join(conf.DataSrc, conf.FabricNodeSrc)
+		nodes, err := tapestry.NewNodes(fabricNodesDataFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// determine desired node state
+		var desiredNodeState []aci.Node
+		for _, node := range nodes {
+			n := aci.Node{
+				Name:   node.Name,
+				ID:     node.NodeID,
+				Serial: node.Serial,
+			}
+			desiredNodeState = append(desiredNodeState, n)
+		}
+
+		// login
+		err = apicClient.Login()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// determine actual node state
+		actualNodeState, err := apicClient.ListNodes()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// determine actions to take
+		na := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
+
+		// delete nodes
+		err = apicClient.DeleteNodes(na.Delete)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err == nil {
+			fmt.Printf("%s\n", "Nodes deleted:")
+			for _, v := range na.Delete {
+				fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+			}
+		}
+
+		// add nodes
+		err = apicClient.AddNodes(na.Add)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err == nil {
+			fmt.Printf("%s\n", "Nodes added:")
+			for _, v := range na.Add {
+				fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+			}
+		}
 	},
 }
 
