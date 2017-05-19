@@ -15,7 +15,10 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/robphoenix/go-aci/aci"
+	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +33,34 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("status called")
+
+		// fetch configuration data
+		conf, err := tapestry.NewConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// create new APIC client
+		apicClient, err := aci.NewClient(conf.URL, conf.User, conf.Password)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// login
+		err = apicClient.Login()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// determine node state
+		nodeState, err := apicClient.ListNodes()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", "Current Nodes:")
+		for _, v := range nodeState {
+			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		}
 	},
 }
 
@@ -46,4 +76,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// statusCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
 }
