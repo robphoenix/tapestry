@@ -18,8 +18,8 @@ import (
 	"log"
 
 	"github.com/robphoenix/go-aci/aci"
-	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // statusCmd represents the status command
@@ -35,13 +35,12 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// fetch configuration data
-		conf, err := tapestry.NewConfig()
-		if err != nil {
-			log.Fatal(err)
-		}
+		apicURL := viper.GetString("apic.url")
+		apicUser := viper.GetString("apic.username")
+		apicPwd := viper.GetString("apic.password")
 
 		// create new APIC client
-		apicClient, err := aci.NewClient(conf.URL, conf.User, conf.Password)
+		apicClient, err := aci.NewClient(apicURL, apicUser, apicPwd)
 		if err != nil {
 			log.Fatal(err)
 		}

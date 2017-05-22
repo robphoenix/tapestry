@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"os"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -46,7 +45,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tapestry.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./tapestry.toml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -59,16 +58,22 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
+		// // Find home directory.
+		// home, err := homedir.Dir()
+		// if err != nil {
+		//         fmt.Println(err)
+		//         os.Exit(1)
+		// }
+		// Find current working directory.
+		cwd, err := os.Getwd()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
 		// Search config in home directory with name ".tapestry" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".tapestry")
+		viper.AddConfigPath(cwd)
+		viper.SetConfigName("tapestry")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
