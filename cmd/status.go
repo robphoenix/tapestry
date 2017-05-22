@@ -18,8 +18,8 @@ import (
 	"log"
 
 	"github.com/robphoenix/go-aci/aci"
+	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // statusCmd represents the status command
@@ -34,19 +34,8 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// fetch configuration data
-		apicURL := viper.GetString("apic.url")
-		apicUser := viper.GetString("apic.username")
-		apicPwd := viper.GetString("apic.password")
-
 		// create new APIC client
-		apicClient, err := aci.NewClient(apicURL, apicUser, apicPwd)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// login
-		err = apicClient.Login()
+		apicClient, err := tapestry.NewACIClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -56,6 +45,7 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		fmt.Printf("%s\n", "Current Nodes:")
 		for _, v := range nodeState {
 			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
