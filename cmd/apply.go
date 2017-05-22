@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Rob Phoenix <rob@robphoenix.com>
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,89 +25,73 @@ import (
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Apply the declared state to the ACI fabric.",
+	Long:  `Apply the declared state to the ACI fabric.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// create new APIC client
-		apicClient, err := tapestry.NewACIClient()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// read in data from fabric membership file
-		nodes, err := tapestry.NewNodes(tapestry.NewSources().FabricNodes)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine desired node state
-		var desiredNodeState []aci.Node
-		for _, node := range nodes {
-			n := aci.Node{
-				Name:   node.Name,
-				ID:     node.NodeID,
-				Serial: node.Serial,
-			}
-			desiredNodeState = append(desiredNodeState, n)
-		}
-
-		// login
-		err = apicClient.Login()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine actual node state
-		actualNodeState, err := aci.ListNodes(apicClient)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine actions to take
-		na := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
-
-		// delete nodes
-		err = aci.DeleteNodes(apicClient, na.Delete)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err == nil {
-			fmt.Printf("%s\n", "Nodes deleted:")
-			for _, v := range na.Delete {
-				fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-			}
-		}
-
-		// add nodes
-		err = aci.AddNodes(apicClient, na.Add)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err == nil {
-			fmt.Printf("%s\n", "Nodes added:")
-			for _, v := range na.Add {
-				fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-			}
-		}
+		applyState()
 	},
+}
+
+func applyState() {
+
+	// create new APIC client
+	apicClient, err := tapestry.NewACIClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// read in data from fabric membership file
+	nodes, err := tapestry.NewNodes(tapestry.NewSources().FabricNodes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine desired node state
+	var desiredNodeState []aci.Node
+	for _, node := range nodes {
+		n := aci.Node{
+			Name:   node.Name,
+			ID:     node.NodeID,
+			Serial: node.Serial,
+		}
+		desiredNodeState = append(desiredNodeState, n)
+	}
+
+	// determine actual node state
+	actualNodeState, err := aci.ListNodes(apicClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine actions to take
+	actions := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
+
+	// delete nodes
+	err = aci.DeleteNodes(apicClient, actions.Delete)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err == nil {
+		fmt.Printf("%s\n", "Nodes deleted:")
+		for _, v := range actions.Delete {
+			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		}
+	}
+
+	// add nodes
+	err = aci.AddNodes(apicClient, actions.Add)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err == nil {
+		fmt.Printf("%s\n", "Nodes added:")
+		for _, v := range actions.Add {
+			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		}
+	}
+
 }
 
 func init() {
 	RootCmd.AddCommand(applyCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// applyCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// applyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
