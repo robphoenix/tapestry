@@ -71,7 +71,7 @@ to quickly create a Cobra application.`,
 		}
 
 		// determine actual node state
-		actualNodeState, err := apicClient.ListNodes()
+		actualNodeState, err := aci.ListNodes(apicClient)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,7 +80,7 @@ to quickly create a Cobra application.`,
 		na := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
 
 		// delete nodes
-		err = apicClient.DeleteNodes(na.Delete)
+		err = aci.DeleteNodes(apicClient, na.Delete)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,7 +92,7 @@ to quickly create a Cobra application.`,
 		}
 
 		// add nodes
-		err = apicClient.AddNodes(na.Add)
+		err = aci.AddNodes(apicClient, na.Add)
 		if err != nil {
 			log.Fatal(err)
 		}

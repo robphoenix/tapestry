@@ -71,7 +71,7 @@ to quickly create a Cobra application.`,
 		}
 
 		// determine actual node state
-		actualNodeState, err := apicClient.ListNodes()
+		actualNodeState, err := aci.ListNodes(apicClient)
 		if err != nil {
 			log.Fatal(err)
 		}
