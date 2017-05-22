@@ -16,12 +16,10 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"path/filepath"
 
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // applyCmd represents the apply command
@@ -42,12 +40,8 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
-		dataSrc := viper.GetString("data.src")
-		fabricNodesSrc := viper.GetString("fabricnodes.src")
-
 		// read in data from fabric membership file
-		fabricNodesDataFile := filepath.Join(dataSrc, fabricNodesSrc)
-		nodes, err := tapestry.NewNodes(fabricNodesDataFile)
+		nodes, err := tapestry.NewNodes(tapestry.NewSources().FabricNodes)
 		if err != nil {
 			log.Fatal(err)
 		}

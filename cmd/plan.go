@@ -21,7 +21,6 @@ import (
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // planCmd represents the plan command
@@ -42,11 +41,8 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
-		dataSrc := viper.GetString("data.src")
-		fabricNodesSrc := viper.GetString("fabricnodes.src")
-
 		// read in data from fabric membership file
-		fabricNodesDataFile := filepath.Join(dataSrc, fabricNodesSrc)
+		fabricNodesDataFile := filepath.Join(tapestry.NewSources().FabricNodes)
 		nodes, err := tapestry.NewNodes(fabricNodesDataFile)
 		if err != nil {
 			log.Fatal(err)
