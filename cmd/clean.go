@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Rob Phoenix <rob@robphoenix.com>
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,10 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/robphoenix/go-aci/aci"
+	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +34,35 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("clean called")
+		cleanFabric()
 	},
+}
+
+func cleanFabric() {
+	// create new APIC client
+	apicClient, err := tapestry.NewACIClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine actual node state
+	nodes, err := aci.ListNodes(apicClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// delete nodes
+	err = aci.DeleteNodes(apicClient, nodes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err == nil {
+		fmt.Printf("%s\n", "Nodes deleted:")
+		for _, node := range nodes {
+			fmt.Printf("%s\t%s\t%s\n", node.Name, node.ID, node.Serial)
+		}
+	}
+
 }
 
 func init() {
