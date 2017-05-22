@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Rob Phoenix <rob@robphoenix.com>
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,45 +25,34 @@ import (
 // statusCmd represents the status command
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Get current status of ACI fabric.",
+	Long:  `Get current status of ACI fabric.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// create new APIC client
-		apicClient, err := tapestry.NewACIClient()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine node state
-		nodeState, err := aci.ListNodes(apicClient)
+		nodes, err := nodeStatus()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		fmt.Printf("%s\n", "Current Nodes:")
-		for _, v := range nodeState {
-			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		for _, node := range nodes {
+			fmt.Printf("%s\t%s\t%s\n", node.Name, node.ID, node.Serial)
 		}
 	},
 }
 
+func nodeStatus() ([]aci.Node, error) {
+	c, err := tapestry.NewACIClient()
+	if err != nil {
+		return nil, err
+	}
+
+	n, err := aci.ListNodes(c)
+	if err != nil {
+		return nil, err
+	}
+	return n, nil
+}
+
 func init() {
 	RootCmd.AddCommand(statusCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// statusCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// statusCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }
