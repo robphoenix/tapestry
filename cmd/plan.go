@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Rob Phoenix <rob@robphoenix.com>
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,64 +26,55 @@ import (
 // planCmd represents the plan command
 var planCmd = &cobra.Command{
 	Use:   "plan",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Plan changes to ACI fabric",
+	Long:  `Plan changes to ACI fabric.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// create new APIC client
-		apicClient, err := tapestry.NewACIClient()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// read in data from fabric membership file
-		fabricNodesDataFile := filepath.Join(tapestry.NewSources().FabricNodes)
-		nodes, err := tapestry.NewNodes(fabricNodesDataFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine desired node state
-		var desiredNodeState []aci.Node
-		for _, node := range nodes {
-			n := aci.Node{
-				Name:   node.Name,
-				ID:     node.NodeID,
-				Serial: node.Serial,
-			}
-			desiredNodeState = append(desiredNodeState, n)
-		}
-
-		// login
-		err = apicClient.Login()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine actual node state
-		actualNodeState, err := aci.ListNodes(apicClient)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// determine actions to take
-		na := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
-
-		fmt.Printf("%s\n", "Nodes to add:")
-		for _, v := range na.Add {
-			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-		}
-		fmt.Printf("%s\n", "Nodes to delete:")
-		for _, v := range na.Delete {
-			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-		}
-
+		planChanges()
 	},
+}
+
+func planChanges() {
+	// create new APIC client
+	apicClient, err := tapestry.NewACIClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// read in data from fabric membership file
+	fabricNodesDataFile := filepath.Join(tapestry.NewSources().FabricNodes)
+	nodes, err := tapestry.NewNodes(fabricNodesDataFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine desired node state
+	var desiredNodeState []aci.Node
+	for _, node := range nodes {
+		n := aci.Node{
+			Name:   node.Name,
+			ID:     node.NodeID,
+			Serial: node.Serial,
+		}
+		desiredNodeState = append(desiredNodeState, n)
+	}
+
+	// determine actual node state
+	actualNodeState, err := aci.ListNodes(apicClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine actions to take
+	actions := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
+
+	fmt.Printf("%s\n", "Nodes to add:")
+	for _, v := range actions.Add {
+		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+	}
+	fmt.Printf("%s\n", "Nodes to delete:")
+	for _, v := range actions.Delete {
+		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+	}
 }
 
 func init() {
