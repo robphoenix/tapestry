@@ -27,30 +27,31 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get current status of ACI fabric.",
 	Long:  `Get current status of ACI fabric.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		nodes, err := nodeStatus()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("%s\n", "Current Nodes:")
-		for _, node := range nodes {
-			fmt.Printf("%s\t%s\t%s\n", node.Name, node.ID, node.Serial)
-		}
-	},
+	Run:   aciStatus,
 }
 
-func nodeStatus() ([]aci.Node, error) {
+func aciStatus(cmd *cobra.Command, args []string) {
+
+	// get status of fabric nodes
+	nodeStatus()
+
+}
+
+func nodeStatus() {
 	c, err := tapestry.NewACIClient()
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	n, err := aci.ListNodes(c)
+	ns, err := aci.ListNodes(c)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	return n, nil
+
+	fmt.Printf("%s\n", "Current Nodes:")
+	for _, n := range ns {
+		fmt.Printf("%s\t%s\t%s\n", n.Name, n.ID, n.Serial)
+	}
 }
 
 func init() {

@@ -28,12 +28,10 @@ var planCmd = &cobra.Command{
 	Use:   "plan",
 	Short: "Plan changes to ACI fabric",
 	Long:  `Plan changes to ACI fabric.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		planChanges()
-	},
+	Run:   planChanges,
 }
 
-func planChanges() {
+func planChanges(cmd *cobra.Command, args []string) {
 	// create new APIC client
 	apicClient, err := tapestry.NewACIClient()
 	if err != nil {

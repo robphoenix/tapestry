@@ -27,12 +27,10 @@ var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply the declared state to the ACI fabric.",
 	Long:  `Apply the declared state to the ACI fabric.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		applyState()
-	},
+	Run:   applyState,
 }
 
-func applyState() {
+func applyState(cmd *cobra.Command, args []string) {
 
 	// create new APIC client
 	apicClient, err := tapestry.NewACIClient()
