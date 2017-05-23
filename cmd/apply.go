@@ -39,7 +39,11 @@ func applyState(cmd *cobra.Command, args []string) {
 	}
 
 	// read in data from fabric membership file
-	nodes, err := tapestry.NewNodes(tapestry.NewSources().FabricNodes)
+	data, err := tapestry.NewSources()
+	if err != nil {
+		log.Fatal(err)
+	}
+	nodes, err := tapestry.NewNodes(data.FabricNodes)
 	if err != nil {
 		log.Fatal(err)
 	}

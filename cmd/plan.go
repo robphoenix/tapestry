@@ -39,7 +39,12 @@ func planChanges(cmd *cobra.Command, args []string) {
 	}
 
 	// read in data from fabric membership file
-	fabricNodesDataFile := filepath.Join(tapestry.NewSources().FabricNodes)
+	data, err := tapestry.NewSources()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("data = %+v\n", data)
+	fabricNodesDataFile := filepath.Join(data.FabricNodes)
 	nodes, err := tapestry.NewNodes(fabricNodesDataFile)
 	if err != nil {
 		log.Fatal(err)
