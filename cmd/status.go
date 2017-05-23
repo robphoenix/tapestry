@@ -34,6 +34,8 @@ func aciStatus(cmd *cobra.Command, args []string) {
 
 	// get status of fabric nodes
 	nodeStatus()
+	// get status of tenants
+	tenantStatus()
 
 }
 
@@ -51,6 +53,23 @@ func nodeStatus() {
 	fmt.Printf("%s\n", "Current Nodes:")
 	for _, n := range ns {
 		fmt.Printf("%s\t%s\t%s\n", n.Name, n.ID, n.Serial)
+	}
+}
+
+func tenantStatus() {
+	c, err := tapestry.NewACIClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ts, err := aci.ListTenants(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%s\n", "Current Tenants:")
+	for _, t := range ts {
+		fmt.Printf("%s\n", t.Name)
 	}
 }
 
