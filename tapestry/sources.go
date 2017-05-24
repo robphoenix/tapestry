@@ -1,10 +1,8 @@
 package tapestry
 
 import (
-	"fmt"
 	"path/filepath"
 
-	"github.com/robphoenix/go-aci/aci"
 	"github.com/spf13/viper"
 )
 
@@ -12,20 +10,15 @@ import (
 type Sources struct {
 	DataDir     string
 	FabricNodes string
-	Tenants     []aci.Tenant
+	Tenants     string
 }
 
 // NewSources instantiates a new Sources struct
-func NewSources() (Sources, error) {
+func NewSources() Sources {
 	dd := viper.GetString("data.src")
-	s := Sources{
+	return Sources{
 		DataDir:     dd,
 		FabricNodes: filepath.Join(dd, viper.GetString("fabricnodes.src")),
+		Tenants:     filepath.Join(dd, viper.GetString("tenants.src")),
 	}
-	err := viper.UnmarshalKey("tenants", &s.Tenants)
-	if err != nil {
-		return s, err
-	}
-	fmt.Printf("s = %+v\n", s)
-	return s, nil
 }

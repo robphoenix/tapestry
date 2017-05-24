@@ -9,10 +9,5 @@ src = ".data"
 [fabricNodes]
 src = "fabric_membership.csv"
 
-[[tenants]]
-name = "ABC-DC5"
-description = "DC5 in Liverpool"
-
-[[tenants]]
-name = "MGMT"
-description = "Management Tenant"
+[tenants]
+src = "tenants.csv"

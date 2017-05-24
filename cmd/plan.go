@@ -38,12 +38,13 @@ func planChanges(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	// read in data from fabric membership file
-	data, err := tapestry.NewSources()
+	// fetch sources
+	data := tapestry.NewSources()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("data = %+v\n", data)
+
+	// read in data from fabric membership file
 	fabricNodesDataFile := filepath.Join(data.FabricNodes)
 	nodes, err := tapestry.NewNodes(fabricNodesDataFile)
 	if err != nil {
@@ -68,16 +69,51 @@ func planChanges(cmd *cobra.Command, args []string) {
 	}
 
 	// determine actions to take
-	actions := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
+	nodeActions := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
 
 	fmt.Printf("%s\n", "Nodes to add:")
-	for _, v := range actions.Add {
+	for _, v := range nodeActions.Add {
 		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 	}
 	fmt.Printf("%s\n", "Nodes to delete:")
-	for _, v := range actions.Delete {
+	for _, v := range nodeActions.Delete {
 		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 	}
+
+	// read in data from tenants file
+	tenantsDataFile := filepath.Join(data.Tenants)
+	tenants, err := tapestry.NewTenants(tenantsDataFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine desired tenant state
+	var desiredTenantState []aci.Tenant
+	for _, tenant := range tenants {
+		t := aci.Tenant{
+			Name: tenant.Name,
+		}
+		desiredTenantState = append(desiredTenantState, t)
+	}
+
+	// determine actual tenant state
+	actualTenantState, err := aci.ListTenants(apicClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// determine actions to take
+	tenantActions := tapestry.DiffTenantStates(desiredTenantState, actualTenantState)
+
+	fmt.Printf("%s\n", "Tenants to add:")
+	for _, v := range tenantActions.Add {
+		fmt.Printf("%s\n", v.Name)
+	}
+	fmt.Printf("%s\n", "Tenants to delete:")
+	for _, v := range tenantActions.Delete {
+		fmt.Printf("%s\n", v.Name)
+	}
+
 }
 
 func init() {

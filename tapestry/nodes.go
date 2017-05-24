@@ -23,9 +23,9 @@ type NodesActions struct {
 	Delete []aci.Node
 }
 
-// structMap builds a hash map of nodes
+// nodesStructMap builds a hash map of nodes
 // indexed by Serial number
-func structMap(ns []aci.Node) map[string]aci.Node {
+func nodesStructMap(ns []aci.Node) map[string]aci.Node {
 	m := make(map[string]aci.Node, len(ns))
 	for _, n := range ns {
 		key := n.Serial + n.ID + n.Name
@@ -36,8 +36,8 @@ func structMap(ns []aci.Node) map[string]aci.Node {
 
 // DiffNodeStates determines which nodes need to be added, deleted or modified
 func DiffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
-	dm := structMap(desired)
-	am := structMap(actual)
+	dm := nodesStructMap(desired)
+	am := nodesStructMap(actual)
 	var na NodesActions
 
 	// add
