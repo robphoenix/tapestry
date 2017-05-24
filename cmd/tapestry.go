@@ -21,7 +21,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile         string
+	dataDir         string
+	nodesDataFile   string
+	tenantsDataFile string
+)
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -58,12 +63,6 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// // Find home directory.
-		// home, err := homedir.Dir()
-		// if err != nil {
-		//         fmt.Println(err)
-		//         os.Exit(1)
-		// }
 		// Find current working directory.
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -71,7 +70,7 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".tapestry" (without extension).
+		// Search config in current working directory with name "tapestry" (without extension).
 		viper.AddConfigPath(cwd)
 		viper.SetConfigName("tapestry")
 	}
@@ -81,5 +80,9 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		// get data paths from config
+		dataDir = viper.GetString("data.src")
+		nodesDataFile = viper.GetString("fabricnodes.src")
+		tenantsDataFile = viper.GetString("tenants.src")
 	}
 }

@@ -19,6 +19,28 @@ type TenantsActions struct {
 	Delete []aci.Tenant
 }
 
+// GetTenants fetches tenant data from file
+func GetTenants(f string) ([]aci.Tenant, error) {
+	csvFile, err := os.Open(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open %s: %v", f, err)
+	}
+	defer csvFile.Close()
+
+	var ts []Tenant
+
+	err = gocsv.UnmarshalFile(csvFile, &ts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
+	}
+
+	var ats []aci.Tenant
+	for _, t := range ts {
+		ats = append(ats, aci.Tenant{Name: t.Name})
+	}
+	return ats, nil
+}
+
 // tenantsStructMap builds a hash map of tenants
 // indexed by name
 func tenantsStructMap(ts []aci.Tenant) map[string]aci.Tenant {
@@ -50,21 +72,4 @@ func DiffTenantStates(desired []aci.Tenant, actual []aci.Tenant) TenantsActions 
 		}
 	}
 	return ta
-}
-
-// NewTenants fetches tenant data from file
-func NewTenants(tenantsFile string) ([]Tenant, error) {
-	csvFile, err := os.Open(tenantsFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", tenantsFile, err)
-	}
-	defer csvFile.Close()
-
-	var tenants []Tenant
-
-	err = gocsv.UnmarshalFile(csvFile, &tenants)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
-	}
-	return tenants, nil
 }

@@ -23,6 +23,32 @@ type NodesActions struct {
 	Delete []aci.Node
 }
 
+// GetNodes instantiates a new Nodes struct from a csv data file
+func GetNodes(f string) ([]aci.Node, error) {
+	csvFile, err := os.Open(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open %s: %v", f, err)
+	}
+	defer csvFile.Close()
+
+	var ns []Node
+
+	err = gocsv.UnmarshalFile(csvFile, &ns)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
+	}
+
+	var ans []aci.Node
+	for _, n := range ns {
+		ans = append(ans, aci.Node{
+			Name:   n.Name,
+			ID:     n.NodeID,
+			Serial: n.Serial,
+		})
+	}
+	return ans, nil
+}
+
 // nodesStructMap builds a hash map of nodes
 // indexed by Serial number
 func nodesStructMap(ns []aci.Node) map[string]aci.Node {
@@ -55,21 +81,4 @@ func DiffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
 		}
 	}
 	return na
-}
-
-// NewNodes fetches fabric membership data from file
-func NewNodes(nodesFile string) ([]Node, error) {
-	csvFile, err := os.Open(nodesFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", nodesFile, err)
-	}
-	defer csvFile.Close()
-
-	var nodes []Node
-
-	err = gocsv.UnmarshalFile(csvFile, &nodes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
-	}
-	return nodes, nil
 }

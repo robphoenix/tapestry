@@ -32,44 +32,28 @@ var planCmd = &cobra.Command{
 }
 
 func planChanges(cmd *cobra.Command, args []string) {
-	// create new APIC client
+
+	// create new ACI client
 	apicClient, err := tapestry.NewACIClient()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// fetch sources
-	data := tapestry.NewSources()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// read in data from fabric membership file
-	fabricNodesDataFile := filepath.Join(data.FabricNodes)
-	nodes, err := tapestry.NewNodes(fabricNodesDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// determine desired node state
-	var desiredNodeState []aci.Node
-	for _, node := range nodes {
-		n := aci.Node{
-			Name:   node.Name,
-			ID:     node.NodeID,
-			Serial: node.Serial,
-		}
-		desiredNodeState = append(desiredNodeState, n)
+	nf := filepath.Join(dataDir, nodesDataFile)
+	wantNodes, err := tapestry.GetNodes(nf)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// determine actual node state
-	actualNodeState, err := aci.ListNodes(apicClient)
+	gotNodes, err := aci.ListNodes(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// determine actions to take
-	nodeActions := tapestry.DiffNodeStates(desiredNodeState, actualNodeState)
+	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
 
 	fmt.Printf("%s\n", "Nodes to add:")
 	for _, v := range nodeActions.Add {
@@ -80,30 +64,21 @@ func planChanges(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 	}
 
-	// read in data from tenants file
-	tenantsDataFile := filepath.Join(data.Tenants)
-	tenants, err := tapestry.NewTenants(tenantsDataFile)
+	// determine desired tenant state
+	tf := filepath.Join(dataDir, tenantsDataFile)
+	wantTenants, err := tapestry.GetTenants(tf)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// determine desired tenant state
-	var desiredTenantState []aci.Tenant
-	for _, tenant := range tenants {
-		t := aci.Tenant{
-			Name: tenant.Name,
-		}
-		desiredTenantState = append(desiredTenantState, t)
-	}
-
 	// determine actual tenant state
-	actualTenantState, err := aci.ListTenants(apicClient)
+	gotTenants, err := aci.ListTenants(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// determine actions to take
-	tenantActions := tapestry.DiffTenantStates(desiredTenantState, actualTenantState)
+	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
 
 	fmt.Printf("%s\n", "Tenants to add:")
 	for _, v := range tenantActions.Add {
@@ -113,7 +88,6 @@ func planChanges(cmd *cobra.Command, args []string) {
 	for _, v := range tenantActions.Delete {
 		fmt.Printf("%s\n", v.Name)
 	}
-
 }
 
 func init() {
