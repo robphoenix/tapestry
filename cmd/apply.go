@@ -56,7 +56,7 @@ func applyState(cmd *cobra.Command, args []string) {
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
 
 	fmt.Printf("%s\n", "Nodes to add:")
-	for _, v := range nodeActions.Add {
+	for _, v := range nodeActions.Create {
 		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 	}
 	fmt.Printf("%s\n", "Nodes to delete:")
@@ -77,13 +77,13 @@ func applyState(cmd *cobra.Command, args []string) {
 	}
 
 	// add nodes
-	err = aci.AddNodes(apicClient, nodeActions.Add)
+	err = aci.AddNodes(apicClient, nodeActions.Create)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err == nil {
 		fmt.Printf("%s\n", "Nodes added:")
-		for _, v := range nodeActions.Add {
+		for _, v := range nodeActions.Create {
 			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
 		}
 	}
@@ -105,7 +105,7 @@ func applyState(cmd *cobra.Command, args []string) {
 	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
 
 	fmt.Printf("%s\n", "Tenants to add:")
-	for _, v := range tenantActions.Add {
+	for _, v := range tenantActions.Create {
 		fmt.Printf("%s\n", v.Name)
 	}
 	fmt.Printf("%s\n", "Tenants to delete:")

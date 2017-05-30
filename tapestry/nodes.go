@@ -19,7 +19,7 @@ type Node struct {
 
 // NodesActions ...
 type NodesActions struct {
-	Add    []aci.Node
+	Create []aci.Node
 	Delete []aci.Node
 }
 
@@ -70,7 +70,7 @@ func DiffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
 	for k, dv := range dm {
 		_, ok := am[k]
 		if !ok {
-			na.Add = append(na.Add, dv)
+			na.Create = append(na.Create, dv)
 		}
 	}
 	// delete

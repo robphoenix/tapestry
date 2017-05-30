@@ -28,13 +28,22 @@ var planCmd = &cobra.Command{
 	Use:   "plan",
 	Short: "Plan changes to ACI fabric",
 	Long:  `Plan changes to ACI fabric.`,
-	Run:   planChanges,
+	Run:   plan,
 }
 
-func planChanges(cmd *cobra.Command, args []string) {
+func plan(cmd *cobra.Command, args []string) {
 
 	// create new ACI client
 	apicClient, err := tapestry.NewACIClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("\nRefreshing APIC state in-memory prior to plan...\n")
+	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Hostname())
+
+	// determine actual node state
+	gotNodes, err := aci.ListNodes(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,22 +55,22 @@ func planChanges(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	// determine actual node state
-	gotNodes, err := aci.ListNodes(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// determine actions to take
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
 
-	fmt.Printf("%s\n", "Nodes to add:")
-	for _, v := range nodeActions.Add {
-		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-	}
-	fmt.Printf("%s\n", "Nodes to delete:")
+	fmt.Printf("%s\n", "Nodes\n=====\n")
+	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(nodeActions.Delete), len(nodeActions.Create))
+
 	for _, v := range nodeActions.Delete {
-		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+		fmt.Printf("Delete -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+	}
+
+	if nodeActions.Delete != nil {
+		fmt.Printf("\n")
+	}
+
+	for _, v := range nodeActions.Create {
+		fmt.Printf("Create -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 	}
 
 	// determine desired tenant state
@@ -80,14 +89,24 @@ func planChanges(cmd *cobra.Command, args []string) {
 	// determine actions to take
 	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
 
-	fmt.Printf("%s\n", "Tenants to add:")
-	for _, v := range tenantActions.Add {
-		fmt.Printf("%s\n", v.Name)
-	}
-	fmt.Printf("%s\n", "Tenants to delete:")
+	fmt.Printf("\nTenants\n=======\n\n")
+	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(tenantActions.Delete), len(tenantActions.Create))
+
 	for _, v := range tenantActions.Delete {
-		fmt.Printf("%s\n", v.Name)
+		fmt.Printf("Delete -> %s\n", v.Name)
 	}
+
+	if tenantActions.Delete != nil {
+		fmt.Printf("\n")
+	}
+
+	for _, v := range tenantActions.Create {
+		fmt.Printf("Create -> %s\n", v.Name)
+	}
+
+	fmt.Printf("\nSummary\n=======\n\n")
+	fmt.Printf("Nodes: %d to delete, %d to create\n", len(nodeActions.Delete), len(nodeActions.Create))
+	fmt.Printf("Tenants: %d to delete, %d to create\n", len(tenantActions.Delete), len(tenantActions.Create))
 }
 
 func init() {

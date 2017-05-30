@@ -15,7 +15,7 @@ type Tenant struct {
 
 // TenantsActions ...
 type TenantsActions struct {
-	Add    []aci.Tenant
+	Create []aci.Tenant
 	Delete []aci.Tenant
 }
 
@@ -61,7 +61,7 @@ func DiffTenantStates(desired []aci.Tenant, actual []aci.Tenant) TenantsActions 
 	for k, dv := range dm {
 		_, ok := am[k]
 		if !ok {
-			ta.Add = append(ta.Add, dv)
+			ta.Create = append(ta.Create, dv)
 		}
 	}
 	// delete
