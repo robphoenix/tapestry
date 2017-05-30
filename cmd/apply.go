@@ -28,10 +28,13 @@ var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply the declared state to the ACI fabric.",
 	Long:  `Apply the declared state to the ACI fabric.`,
-	Run:   applyState,
+	Run:   apply,
 }
 
-func applyState(cmd *cobra.Command, args []string) {
+func apply(cmd *cobra.Command, args []string) {
+
+	var nCreated, nDeleted int
+	var tCreated, tDeleted int
 
 	// create new ACI client
 	apicClient, err := tapestry.NewACIClient()
@@ -55,36 +58,35 @@ func applyState(cmd *cobra.Command, args []string) {
 	// determine actions to take
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
 
-	fmt.Printf("%s\n", "Nodes to add:")
-	for _, v := range nodeActions.Create {
-		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-	}
-	fmt.Printf("%s\n", "Nodes to delete:")
-	for _, v := range nodeActions.Delete {
-		fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
-	}
-
 	// delete nodes
-	err = aci.DeleteNodes(apicClient, nodeActions.Delete)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err == nil {
-		fmt.Printf("%s\n", "Nodes deleted:")
-		for _, v := range nodeActions.Delete {
-			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+	// do this first as we can't modify nodes that already exist
+	// so we have to delete and then re-add them
+	if nodeActions.Delete != nil {
+		err = aci.DeleteNodes(apicClient, nodeActions.Delete)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err == nil {
+			nDeleted = len(nodeActions.Delete)
+			fmt.Printf("Deleting Nodes...\n")
+			for _, v := range nodeActions.Delete {
+				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+			}
 		}
 	}
 
-	// add nodes
-	err = aci.AddNodes(apicClient, nodeActions.Create)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err == nil {
-		fmt.Printf("%s\n", "Nodes added:")
-		for _, v := range nodeActions.Create {
-			fmt.Printf("%s\t%s\t%s\n", v.Name, v.ID, v.Serial)
+	// create nodes
+	if nodeActions.Create != nil {
+		err = aci.CreateNodes(apicClient, nodeActions.Create)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err == nil {
+			nCreated = len(nodeActions.Create)
+			fmt.Printf("Creating Nodes...\n")
+			for _, v := range nodeActions.Create {
+				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+			}
 		}
 	}
 
@@ -104,14 +106,41 @@ func applyState(cmd *cobra.Command, args []string) {
 	// determine actions to take
 	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
 
-	fmt.Printf("%s\n", "Tenants to add:")
-	for _, v := range tenantActions.Create {
-		fmt.Printf("%s\n", v.Name)
+	// delete tenants
+	// do this first as we can't modify nodes that already exist
+	// so we have to delete and then re-add them
+	if tenantActions.Delete != nil {
+		fmt.Printf("\nDeleting Tenants...\n")
+		for _, v := range tenantActions.Delete {
+			err = aci.DeleteTenant(apicClient, v)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err == nil {
+				tDeleted++
+				fmt.Printf("%s\n", v.Name)
+			}
+		}
 	}
-	fmt.Printf("%s\n", "Tenants to delete:")
-	for _, v := range tenantActions.Delete {
-		fmt.Printf("%s\n", v.Name)
+
+	// create tenants
+	if tenantActions.Create != nil {
+		fmt.Printf("\nCreating Tenants...\n")
+		for _, v := range tenantActions.Create {
+			err = aci.CreateTenant(apicClient, v)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err == nil {
+				tCreated++
+				fmt.Printf("%s\n", v.Name)
+			}
+		}
 	}
+
+	fmt.Printf("\nSummary\n=======\n\n")
+	fmt.Printf("Nodes: %d deleted, %d created\n", nDeleted, nCreated)
+	fmt.Printf("Tenants: %d deleted, %d created\n", tDeleted, tCreated)
 }
 
 func init() {

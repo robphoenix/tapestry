@@ -58,7 +58,7 @@ func plan(cmd *cobra.Command, args []string) {
 	// determine actions to take
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
 
-	fmt.Printf("%s\n", "Nodes\n=====\n")
+	fmt.Printf("Nodes\n=====\n\n")
 	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(nodeActions.Delete), len(nodeActions.Create))
 
 	for _, v := range nodeActions.Delete {
