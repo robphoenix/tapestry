@@ -27,50 +27,42 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Get current status of ACI fabric.",
 	Long:  `Get current status of ACI fabric.`,
-	Run:   aciStatus,
+	Run:   status,
 }
 
-func aciStatus(cmd *cobra.Command, args []string) {
+func status(cmd *cobra.Command, args []string) {
+
+	apicClient, err := tapestry.NewACIClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("\nRefreshing APIC state in-memory...\n")
+	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Hostname())
 
 	// get status of fabric nodes
-	nodeStatus()
-	// get status of tenants
-	tenantStatus()
-
-}
-
-func nodeStatus() {
-	c, err := tapestry.NewACIClient()
+	ns, err := aci.ListNodes(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ns, err := aci.ListNodes(c)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%s\n", "Current Nodes:")
+	// print current nodes
+	fmt.Printf("Nodes\n=====\n\n")
 	for _, n := range ns {
-		fmt.Printf("%s\t%s\t%s\n", n.Name, n.ID, n.Serial)
+		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name, n.ID, n.Serial)
 	}
-}
 
-func tenantStatus() {
-	c, err := tapestry.NewACIClient()
+	// get status of tenants
+	ts, err := aci.ListTenants(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ts, err := aci.ListTenants(c)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%s\n", "Current Tenants:")
+	fmt.Printf("\nTenants\n=======\n\n")
 	for _, t := range ts {
 		fmt.Printf("%s\n", t.Name)
 	}
+
 }
 
 func init() {
