@@ -16,6 +16,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/tapestry"
@@ -33,35 +34,79 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("destroy called")
-		destroyFabric()
+		destroy()
 	},
 }
 
-func destroyFabric() {
-	// create new APIC client
+func destroy() {
+
+	d := "Do you really want to destroy?\n\n" +
+		"Tapestry will delete all your APIC configuration.\n" +
+		"There is no undo. Only 'yes' will be accepted to confirm.\n\n" +
+		"Enter value: "
+	fmt.Printf(d)
+
+	var response string
+	fmt.Scanf("%s", &response)
+
+	if response != "yes" {
+		fmt.Printf("Destroy Cancelled.\n")
+		os.Exit(1)
+	}
+
+	var nDeleted, tDeleted int
+
+	// create new ACI client
 	apicClient, err := tapestry.NewACIClient()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// determine actual node state
+	// get node state
 	nodes, err := aci.ListNodes(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// delete nodes
-	err = aci.DeleteNodes(apicClient, nodes)
+	if nodes != nil {
+		err = aci.DeleteNodes(apicClient, nodes)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err == nil {
+			nDeleted = len(nodes)
+			fmt.Printf("Deleting Nodes...\n")
+			for _, v := range nodes {
+				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+			}
+		}
+	}
+
+	// get tenant state
+	tenants, err := aci.ListTenants(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err == nil {
-		fmt.Printf("%s\n", "Nodes deleted:")
-		for _, node := range nodes {
-			fmt.Printf("%s\t%s\t%s\n", node.Name, node.ID, node.Serial)
+
+	// delete tenants
+	if tenants != nil {
+		fmt.Printf("\nDeleting Tenants...\n")
+		for _, v := range tenants {
+			err = aci.DeleteTenant(apicClient, v)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err == nil {
+				tDeleted++
+				fmt.Printf("%s\n", v.Name)
+			}
 		}
 	}
+
+	fmt.Printf("\nSummary\n=======\n\n")
+	fmt.Printf("Nodes: %d deleted\n", nDeleted)
+	fmt.Printf("Tenants: %d deleted\n", tDeleted)
 
 }
 
