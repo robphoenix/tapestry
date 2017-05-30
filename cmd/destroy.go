@@ -14,9 +14,11 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/tapestry"
@@ -40,16 +42,20 @@ to quickly create a Cobra application.`,
 
 func destroy() {
 
-	d := "Do you really want to destroy?\n\n" +
+	prompt := "Do you really want to destroy?\n\n" +
 		"Tapestry will delete all your APIC configuration.\n" +
 		"There is no undo. Only 'yes' will be accepted to confirm.\n\n" +
 		"Enter value: "
-	fmt.Printf(d)
+	fmt.Printf(prompt)
 
-	var response string
-	fmt.Scanf("%s", &response)
+	reader := bufio.NewReader(os.Stdin)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %#v\n", err.Error())
+		os.Exit(1)
+	}
 
-	if response != "yes" {
+	if strings.TrimSpace(response) != "yes" {
 		fmt.Printf("Destroy Cancelled.\n")
 		os.Exit(1)
 	}
