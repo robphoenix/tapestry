@@ -50,9 +50,15 @@ func apply(cmd *cobra.Command, args []string) {
 	}
 
 	// determine actual node state
-	gotNodes, err := aci.ListNodes(apicClient)
+	nodes, err := aci.ListNodes(apicClient)
 	if err != nil {
 		log.Fatal(err)
+	}
+	var gotNodes []aci.Node
+	for _, n := range nodes {
+		if n.Role != "controller" {
+			gotNodes = append(gotNodes, n)
+		}
 	}
 
 	// determine actions to take
@@ -98,9 +104,15 @@ func apply(cmd *cobra.Command, args []string) {
 	}
 
 	// determine actual tenant state
-	gotTenants, err := aci.ListTenants(apicClient)
+	tenants, err := aci.ListTenants(apicClient)
 	if err != nil {
 		log.Fatal(err)
+	}
+	var gotTenants []aci.Tenant
+	for _, t := range tenants {
+		if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
+			gotTenants = append(gotTenants, t)
+		}
 	}
 
 	// determine actions to take
