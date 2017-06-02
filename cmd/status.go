@@ -38,7 +38,7 @@ func status(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("\nRefreshing APIC state in-memory...\n")
-	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Hostname())
+	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
 
 	// get status of fabric nodes
 	ns, err := aci.ListNodes(apicClient)

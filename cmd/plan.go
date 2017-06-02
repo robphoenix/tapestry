@@ -40,7 +40,7 @@ func plan(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("\nRefreshing APIC state in-memory prior to plan...\n")
-	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Hostname())
+	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
 
 	// determine actual node state
 	gotNodes, err := aci.ListNodes(apicClient)

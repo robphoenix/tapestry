@@ -52,7 +52,7 @@ func tenantsStructMap(ts []aci.Tenant) map[string]aci.Tenant {
 }
 
 // DiffTenantStates determines which tenants need to be added, deleted or modified
-func DiffTenantStates(desired []aci.Tenant, actual []aci.Tenant) TenantsActions {
+func DiffTenantStates(desired, actual []aci.Tenant) TenantsActions {
 	dm := tenantsStructMap(desired)
 	am := tenantsStructMap(actual)
 	var ta TenantsActions
