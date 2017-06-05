@@ -1,52 +1,13 @@
 package tapestry
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/gocarina/gocsv"
 	"github.com/robphoenix/go-aci/aci"
 )
-
-// Node ...
-type Node struct {
-	NodeID string `csv:"Node ID"`
-	Name   string `csv:"Name"`
-	PodID  string `csv:"Pod ID"`
-	Serial string `csv:"Serial"`
-	Role   string `csv:"Role"`
-}
 
 // NodesActions ...
 type NodesActions struct {
 	Create []aci.Node
 	Delete []aci.Node
-}
-
-// GetNodes instantiates a new Nodes struct from a csv data file
-func GetNodes(f string) ([]aci.Node, error) {
-	csvFile, err := os.Open(f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", f, err)
-	}
-	defer csvFile.Close()
-
-	var ns []Node
-
-	err = gocsv.UnmarshalFile(csvFile, &ns)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
-	}
-
-	var ans []aci.Node
-	for _, n := range ns {
-		ans = append(ans, aci.Node{
-			Name:   n.Name,
-			ID:     n.NodeID,
-			Serial: n.Serial,
-		})
-	}
-	return ans, nil
 }
 
 // nodesStructMap builds a hash map of nodes

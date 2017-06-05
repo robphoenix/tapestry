@@ -1,0 +1,27 @@
+---
+
+apic:
+  url: sandboxapicdc.cisco.com
+  username: admin
+  password: ciscopsdt
+
+# Fabric Membership
+nodes:
+  # Spine
+  - {name: spine-901, node_id: 901, pod_id: 1, serial: ABC2002W1XF, role: spine}
+  - {name: spine-902, node_id: 902, pod_id: 1, serial: ABC2002W1WJ, role: spine}
+  # Leaf
+  - {name: leaf-101, node_id: 111, pod_id: 1, serial: ABC1952T9YC, role: leaf}
+  - {name: leaf-102, node_id: 112, pod_id: 1, serial: ABC1952T92U, role: leaf}
+  - {name: leaf-103, node_id: 113, pod_id: 1, serial: ABC1952T93M, role: leaf}
+  - {name: leaf-104, node_id: 104, pod_id: 1, serial: ABC1950T9JZ, role: leaf}
+  - {name: leaf-105, node_id: 105, pod_id: 1, serial: ABC1952R531, role: leaf}
+  - {name: leaf-106, node_id: 106, pod_id: 1, serial: ABC1952R5UN, role: leaf}
+  - {name: leaf-107, node_id: 107, pod_id: 1, serial: ABC1952R5V6, role: leaf}
+  - {name: leaf-108, node_id: 108, pod_id: 1, serial: ABC1950FES7, role: leaf}
+  - {name: leaf-109, node_id: 109, pod_id: 1, serial: ABC1951FETW, role: leaf}
+  - {name: leaf-110, node_id: 110, pod_id: 1, serial: ABC1952FEU3, role: leaf}
+
+tenants:
+  - {name: ABC-DC5, description: DC5 in Liverpool}
+  - {name: MGMT, description: Management Tenant}

@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/robphoenix/go-aci/aci"
-	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
 )
 
@@ -62,16 +61,25 @@ func destroy() {
 
 	var nDeleted, tDeleted int
 
-	// create new ACI client
-	apicClient, err := tapestry.NewACIClient()
+	apicClient, err := aci.NewClient(Cfg.APIC.URL, Cfg.APIC.Username, Cfg.APIC.Password)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not create ACI client: %v", err)
+	}
+	err = apicClient.Login()
+	if err != nil {
+		log.Fatalf("could not login: %v", err)
 	}
 
 	// get node state
-	nodes, err := aci.ListNodes(apicClient)
+	aciNodes, err := aci.ListNodes(apicClient)
 	if err != nil {
 		log.Fatal(err)
+	}
+	var nodes []aci.Node
+	for _, n := range aciNodes {
+		if n.Role != "controller" {
+			nodes = append(nodes, n)
+		}
 	}
 
 	// delete nodes
@@ -82,7 +90,7 @@ func destroy() {
 		}
 		if err == nil {
 			nDeleted = len(nodes)
-			fmt.Printf("Deleting Nodes...\n")
+			fmt.Printf("Deleting Nodes...\n\n")
 			for _, v := range nodes {
 				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 			}
@@ -90,14 +98,20 @@ func destroy() {
 	}
 
 	// get tenant state
-	tenants, err := aci.ListTenants(apicClient)
+	aciTenants, err := aci.ListTenants(apicClient)
 	if err != nil {
 		log.Fatal(err)
+	}
+	var tenants []aci.Tenant
+	for _, t := range aciTenants {
+		if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
+			tenants = append(tenants, t)
+		}
 	}
 
 	// delete tenants
 	if tenants != nil {
-		fmt.Printf("\nDeleting Tenants...\n")
+		fmt.Printf("\nDeleting Tenants...\n\n")
 		for _, v := range tenants {
 			err = aci.DeleteTenant(apicClient, v)
 			if err != nil {
