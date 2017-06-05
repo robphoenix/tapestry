@@ -74,7 +74,7 @@ func apply(cmd *cobra.Command, args []string) {
 		}
 		if err == nil {
 			nDeleted = len(nodeActions.Delete)
-			fmt.Printf("Deleting Nodes...\n")
+			fmt.Printf("Deleting Nodes...\n\n")
 			for _, v := range nodeActions.Delete {
 				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 			}
@@ -89,7 +89,7 @@ func apply(cmd *cobra.Command, args []string) {
 		}
 		if err == nil {
 			nCreated = len(nodeActions.Create)
-			fmt.Printf("Creating Nodes...\n")
+			fmt.Printf("Creating Nodes...\n\n")
 			for _, v := range nodeActions.Create {
 				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 			}
@@ -122,7 +122,7 @@ func apply(cmd *cobra.Command, args []string) {
 	// do this first as we can't modify nodes that already exist
 	// so we have to delete and then re-add them
 	if tenantActions.Delete != nil {
-		fmt.Printf("\nDeleting Tenants...\n")
+		fmt.Printf("\nDeleting Tenants...\n\n")
 		for _, v := range tenantActions.Delete {
 			err = aci.DeleteTenant(apicClient, v)
 			if err != nil {
@@ -137,7 +137,7 @@ func apply(cmd *cobra.Command, args []string) {
 
 	// create tenants
 	if tenantActions.Create != nil {
-		fmt.Printf("\nCreating Tenants...\n")
+		fmt.Printf("\nCreating Tenants...\n\n")
 		for _, v := range tenantActions.Create {
 			err = aci.CreateTenant(apicClient, v)
 			if err != nil {
