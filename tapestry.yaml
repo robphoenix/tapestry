@@ -1,0 +1,15 @@
+---
+
+apic:
+  url: "sandboxapicdc.cisco.com"
+  username: "admin"
+  password: "ciscopsdt"
+
+data:
+  src: ".data"
+
+fabricNodes:
+  src: "fabric_membership.csv"
+
+tenants:
+  src: "tenants.csv"
