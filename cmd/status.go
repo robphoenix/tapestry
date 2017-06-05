@@ -18,7 +18,6 @@ import (
 	"log"
 
 	"github.com/robphoenix/go-aci/aci"
-	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
 )
 
@@ -32,9 +31,13 @@ var statusCmd = &cobra.Command{
 
 func status(cmd *cobra.Command, args []string) {
 
-	apicClient, err := tapestry.NewACIClient()
+	apicClient, err := aci.NewClient(Cfg.APIC.URL, Cfg.APIC.Username, Cfg.APIC.Password)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not create ACI client: %v", err)
+	}
+	err = apicClient.Login()
+	if err != nil {
+		log.Fatalf("could not login: %v", err)
 	}
 
 	fmt.Printf("\nRefreshing APIC state in-memory...\n")
@@ -49,7 +52,9 @@ func status(cmd *cobra.Command, args []string) {
 	// print current nodes
 	fmt.Printf("Nodes\n=====\n\n")
 	for _, n := range ns {
-		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name, n.ID, n.Serial)
+		if n.Role != "controller" {
+			fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name, n.ID, n.Serial)
+		}
 	}
 
 	// get status of tenants

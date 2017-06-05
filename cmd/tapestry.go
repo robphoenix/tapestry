@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -22,17 +23,43 @@ import (
 )
 
 var (
-	cfgFile         string
-	dataDir         string
-	nodesDataFile   string
-	tenantsDataFile string
+	cfgFile string
+	// Cfg ...
+	Cfg config
+	// RootCmd represents the base command when called without any subcommands
+	RootCmd = &cobra.Command{
+		Use:   "tapestry",
+		Short: "Weave a Cisco ACI fabric",
+		Long:  `Tapestry is a CLI tool for declaring and deploying your Cisco ACI fabric.`,
+	}
 )
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
-	Use:   "tapestry",
-	Short: "Weave a Cisco ACI fabric",
-	Long:  `Tapestry is a CLI tool for declaring and deploying your Cisco ACI fabric.`,
+type config struct {
+	APIC    APIC
+	Nodes   []Node
+	Tenants []Tenant
+}
+
+// APIC ...
+type APIC struct {
+	URL      string
+	Username string
+	Password string
+}
+
+// Node ...
+type Node struct {
+	Name   string
+	ID     string `mapstructure:"node_id"`
+	Pod    string `mapstructure:"pod_id"`
+	Serial string
+	Role   string
+}
+
+// Tenant ...
+type Tenant struct {
+	Name        string
+	Description string
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -79,10 +106,9 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		// fmt.Println("Using config file:", viper.ConfigFileUsed())
-		// get data paths from config
-		dataDir = viper.GetString("data.src")
-		nodesDataFile = viper.GetString("fabricnodes.src")
-		tenantsDataFile = viper.GetString("tenants.src")
+		err := viper.Unmarshal(&Cfg)
+		if err != nil {
+			log.Fatalf("unable to decode into struct, %v", err)
+		}
 	}
 }
