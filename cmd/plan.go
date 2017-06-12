@@ -49,6 +49,7 @@ func plan(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// filter out controllers
 	var gotNodes []aci.Node
 	for _, n := range aciNodes {
 		if n.Role != "controller" {
