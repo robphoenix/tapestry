@@ -23,7 +23,6 @@ import (
 )
 
 var (
-	cfgFile string
 	// Cfg holds APIC configuration details
 	Cfg config
 	// RootCmd represents the base command when called without any subcommands
@@ -56,44 +55,19 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./tapestry.cfg)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-// initConfig reads in config file and ENV variables if set.
+// initConfig reads in config file
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find current working directory.
-		// cwd, err := os.Getwd()
-		// if err != nil {
-		//         fmt.Println(err)
-		//         os.Exit(1)
-		// }
+	viper.SetConfigName("config") // name of config file (without extension)
+	viper.AddConfigPath(".")      // look for config in the working directory
 
-		viper.AddConfigPath(".")
-		viper.SetConfigName("config")
-		viper.SetConfigType("toml")
-	}
-
-	// read in environment variables that match
-	// viper.AutomaticEnv()
-
-	// If a config file is found, read it in.
+	// read in config file
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
-	// unmarshal config data into Cfg struct
+	// unmarshal config data
 	err = viper.Unmarshal(&Cfg)
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
