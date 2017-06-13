@@ -24,7 +24,7 @@ import (
 
 var (
 	cfgFile string
-	// Cfg ...
+	// Cfg holds APIC configuration details
 	Cfg config
 	// RootCmd represents the base command when called without any subcommands
 	RootCmd = &cobra.Command{
@@ -35,31 +35,14 @@ var (
 )
 
 type config struct {
-	APIC    APIC
-	Nodes   []Node
-	Tenants []Tenant
+	APIC APIC
 }
 
-// APIC ...
+// APIC holds all the APIC configuration details
 type APIC struct {
 	URL      string
 	Username string
 	Password string
-}
-
-// Node ...
-type Node struct {
-	Name   string
-	ID     string `mapstructure:"node_id"`
-	Pod    string `mapstructure:"pod_id"`
-	Serial string
-	Role   string
-}
-
-// Tenant ...
-type Tenant struct {
-	Name        string
-	Description string
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
