@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply the declared state to the ACI fabric.",
@@ -32,10 +31,11 @@ var applyCmd = &cobra.Command{
 
 func apply(cmd *cobra.Command, args []string) {
 
-	var nCreated, nDeleted int
-	var tCreated, tDeleted int
+	// declare counters
+	var nCreated, nDeleted, tCreated, tDeleted int
 
-	apicClient, err := aci.NewClient(Cfg.APIC.URL, Cfg.APIC.Username, Cfg.APIC.Password)
+	// authenticate
+	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
 	if err != nil {
 		log.Fatalf("could not create ACI client: %v", err)
 	}
@@ -45,17 +45,10 @@ func apply(cmd *cobra.Command, args []string) {
 	}
 
 	// desired node state
-	nodes := Cfg.Nodes
-	var wantNodes []aci.Node
-	for _, n := range nodes {
-		wn := aci.Node{
-			Name:   n.Name,
-			ID:     n.ID,
-			Serial: n.Serial,
-		}
-		wantNodes = append(wantNodes, wn)
+	wantNodes, err := tapestry.GetDeclaredNodes()
+	if err != nil {
+		log.Fatal(err)
 	}
-
 	// actual node state
 	aciNodes, err := aci.ListNodes(apicClient)
 	if err != nil {
@@ -70,7 +63,6 @@ func apply(cmd *cobra.Command, args []string) {
 
 	// actions to take
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
-
 	// delete nodes
 	// do this first as we can't modify nodes that already exist
 	// so we have to delete and then re-add them
@@ -87,7 +79,6 @@ func apply(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-
 	// create nodes
 	if nodeActions.Create != nil {
 		err = aci.CreateNodes(apicClient, nodeActions.Create)
@@ -104,15 +95,10 @@ func apply(cmd *cobra.Command, args []string) {
 	}
 
 	// desired tenant state
-	tenants := Cfg.Tenants
-	var wantTenants []aci.Tenant
-	for _, t := range tenants {
-		wt := aci.Tenant{
-			Name: t.Name,
-		}
-		wantTenants = append(wantTenants, wt)
+	wantTenants, err := tapestry.GetDeclaredTenants()
+	if err != nil {
+		log.Fatal(err)
 	}
-
 	// actual tenant state
 	aciTenants, err := aci.ListTenants(apicClient)
 	if err != nil {
@@ -127,7 +113,6 @@ func apply(cmd *cobra.Command, args []string) {
 
 	// actions to take
 	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
-
 	// delete tenants
 	// do this first as we can't modify nodes that already exist
 	// so we have to delete and then re-add them
@@ -144,7 +129,6 @@ func apply(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-
 	// create tenants
 	if tenantActions.Create != nil {
 		fmt.Printf("\nCreating Tenants...\n\n")
@@ -160,11 +144,8 @@ func apply(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// summary
 	fmt.Printf("\nSummary\n=======\n\n")
 	fmt.Printf("Nodes: %d deleted, %d created\n", nDeleted, nCreated)
 	fmt.Printf("Tenants: %d deleted, %d created\n", tDeleted, tCreated)
-}
-
-func init() {
-	RootCmd.AddCommand(applyCmd)
 }

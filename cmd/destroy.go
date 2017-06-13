@@ -24,44 +24,44 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// destroyCmd represents the destroy command
-var destroyCmd = &cobra.Command{
-	Use:   "destroy",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
+var (
+	nDeleted   int
+	tDeleted   int
+	destroyCmd = &cobra.Command{
+		Use:   "destroy",
+		Short: "A brief description of your command",
+		Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		destroy()
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			destroy()
+		},
+	}
+)
 
 func destroy() {
-
+	// destroy confirmation
 	prompt := "Do you really want to destroy?\n\n" +
 		"Tapestry will delete all your APIC configuration.\n" +
 		"There is no undo. Only 'yes' will be accepted to confirm.\n\n" +
 		"Enter value: "
 	fmt.Printf(prompt)
-
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %#v\n", err.Error())
 		os.Exit(1)
 	}
-
 	if strings.TrimSpace(response) != "yes" {
 		fmt.Printf("Destroy Cancelled.\n")
 		os.Exit(1)
 	}
 
-	var nDeleted, tDeleted int
-
-	apicClient, err := aci.NewClient(Cfg.APIC.URL, Cfg.APIC.Username, Cfg.APIC.Password)
+	// authenticate
+	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
 	if err != nil {
 		log.Fatalf("could not create ACI client: %v", err)
 	}
@@ -124,22 +124,8 @@ func destroy() {
 		}
 	}
 
+	// summary
 	fmt.Printf("\nSummary\n=======\n\n")
 	fmt.Printf("Nodes: %d deleted\n", nDeleted)
 	fmt.Printf("Tenants: %d deleted\n", tDeleted)
-
-}
-
-func init() {
-	RootCmd.AddCommand(destroyCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// destroyCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// destroyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
