@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	dataFile = "data/tenant.csv"
+	tenantDataFile = "data/tenant.csv"
 )
 
 // Tenant ...
@@ -35,9 +35,9 @@ func tenantsStructMap(ts []aci.Tenant) map[string]aci.Tenant {
 
 // GetDeclaredTenants fetches tenant data from file
 func GetDeclaredTenants() ([]aci.Tenant, error) {
-	csvFile, err := os.Open(dataFile)
+	csvFile, err := os.Open(tenantDataFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", f, err)
+		return nil, fmt.Errorf("failed to open %s: %v", tenantDataFile, err)
 	}
 	defer csvFile.Close()
 

@@ -42,7 +42,7 @@ func nodesStructMap(ns []aci.Node) map[string]aci.Node {
 func GetDeclaredNodes() ([]aci.Node, error) {
 	csvFile, err := os.Open(dataFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", f, err)
+		return nil, fmt.Errorf("failed to open %s: %v", dataFile, err)
 	}
 	defer csvFile.Close()
 
