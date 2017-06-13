@@ -31,7 +31,8 @@ var statusCmd = &cobra.Command{
 
 func status(cmd *cobra.Command, args []string) {
 
-	apicClient, err := aci.NewClient(Cfg.APIC.URL, Cfg.APIC.Username, Cfg.APIC.Password)
+	// authenticate
+	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
 	if err != nil {
 		log.Fatalf("could not create ACI client: %v", err)
 	}
@@ -68,8 +69,4 @@ func status(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s\n", t.Name)
 	}
 
-}
-
-func init() {
-	RootCmd.AddCommand(statusCmd)
 }
