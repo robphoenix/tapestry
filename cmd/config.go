@@ -35,7 +35,7 @@ var (
 )
 
 type config struct {
-	APIC APIC
+	APIC
 }
 
 // APIC holds all the APIC configuration details
@@ -74,26 +74,28 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find current working directory.
-		cwd, err := os.Getwd()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		// cwd, err := os.Getwd()
+		// if err != nil {
+		//         fmt.Println(err)
+		//         os.Exit(1)
+		// }
 
-		// Search config in current working directory with name "tapestry" (without extension).
-		viper.AddConfigPath(cwd)
-		viper.SetConfigName("tapestry")
+		viper.AddConfigPath(".")
+		viper.SetConfigName("config")
 		viper.SetConfigType("toml")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	// read in environment variables that match
+	// viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		// unmarshal config data into Cfg struct
-		err := viper.Unmarshal(&Cfg)
-		if err != nil {
-			log.Fatalf("unable to decode into struct, %v", err)
-		}
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// unmarshal config data into Cfg struct
+	err = viper.Unmarshal(&Cfg)
+	if err != nil {
+		log.Fatalf("unable to decode into struct, %v", err)
 	}
 }
