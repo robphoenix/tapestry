@@ -50,6 +50,7 @@ func Execute() {
 
 	// add child commands to root command
 	RootCmd.AddCommand(statusCmd)
+	RootCmd.AddCommand(planCmd)
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)

@@ -32,7 +32,8 @@ var planCmd = &cobra.Command{
 
 func plan(cmd *cobra.Command, args []string) {
 
-	apicClient, err := aci.NewClient(Cfg.APIC.URL, Cfg.APIC.Username, Cfg.APIC.Password)
+	// authenticate
+	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
 	if err != nil {
 		log.Fatalf("could not create ACI client: %v", err)
 	}
@@ -43,6 +44,12 @@ func plan(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("\nRefreshing APIC state in-memory prior to plan...\n")
 	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
+
+	// desired node state
+	wantNodes, err := tapestry.GetDeclaredNodes()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// actual node state
 	aciNodes, err := aci.ListNodes(apicClient)
@@ -57,44 +64,25 @@ func plan(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// desired node state
-	nodes := Cfg.Nodes
-	var wantNodes []aci.Node
-	for _, n := range nodes {
-		wn := aci.Node{
-			Name:   n.Name,
-			ID:     n.ID,
-			Serial: n.Serial,
-		}
-		wantNodes = append(wantNodes, wn)
-	}
-
 	// actions to take
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
 
 	fmt.Printf("Nodes\n=====\n\n")
 	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(nodeActions.Delete), len(nodeActions.Create))
-
 	for _, v := range nodeActions.Delete {
 		fmt.Printf("Delete -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 	}
-
 	if nodeActions.Delete != nil {
 		fmt.Printf("\n")
 	}
-
 	for _, v := range nodeActions.Create {
 		fmt.Printf("Create -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 	}
 
 	// desired tenant state
-	tenants := Cfg.Tenants
-	var wantTenants []aci.Tenant
-	for _, t := range tenants {
-		wt := aci.Tenant{
-			Name: t.Name,
-		}
-		wantTenants = append(wantTenants, wt)
+	wantTenants, err := tapestry.GetDeclaredTenants()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// determine actual tenant state
@@ -114,34 +102,18 @@ func plan(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("\nTenants\n=======\n\n")
 	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(tenantActions.Delete), len(tenantActions.Create))
-
 	for _, v := range tenantActions.Delete {
 		fmt.Printf("Delete -> %s\n", v.Name)
 	}
-
 	if tenantActions.Delete != nil {
 		fmt.Printf("\n")
 	}
-
 	for _, v := range tenantActions.Create {
 		fmt.Printf("Create -> %s\n", v.Name)
 	}
 
+	// summary
 	fmt.Printf("\nSummary\n=======\n\n")
 	fmt.Printf("Nodes: %d to delete, %d to create\n", len(nodeActions.Delete), len(nodeActions.Create))
 	fmt.Printf("Tenants: %d to delete, %d to create\n", len(tenantActions.Delete), len(tenantActions.Create))
-}
-
-func init() {
-	RootCmd.AddCommand(planCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// planCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// planCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
