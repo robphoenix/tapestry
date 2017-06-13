@@ -1,8 +1,21 @@
 package tapestry
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/gocarina/gocsv"
 	"github.com/robphoenix/go-aci/aci"
 )
+
+const (
+	dataFile = "data/tenant.csv"
+)
+
+// Tenant ...
+type Tenant struct {
+	Name string `csv:"Name"`
+}
 
 // TenantsActions ...
 type TenantsActions struct {
@@ -18,6 +31,28 @@ func tenantsStructMap(ts []aci.Tenant) map[string]aci.Tenant {
 		m[t.Name] = t
 	}
 	return m
+}
+
+// GetDeclaredTenants fetches tenant data from file
+func GetDeclaredTenants() ([]aci.Tenant, error) {
+	csvFile, err := os.Open(dataFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open %s: %v", f, err)
+	}
+	defer csvFile.Close()
+
+	var ts []Tenant
+
+	err = gocsv.UnmarshalFile(csvFile, &ts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal csv data: %v", err)
+	}
+
+	var ats []aci.Tenant
+	for _, t := range ts {
+		ats = append(ats, aci.Tenant{Name: t.Name})
+	}
+	return ats, nil
 }
 
 // DiffTenantStates determines which tenants need to be added, deleted or modified
