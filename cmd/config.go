@@ -77,7 +77,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./tapestry.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./tapestry.cfg)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -100,12 +100,14 @@ func initConfig() {
 		// Search config in current working directory with name "tapestry" (without extension).
 		viper.AddConfigPath(cwd)
 		viper.SetConfigName("tapestry")
+		viper.SetConfigType("toml")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
+		// unmarshal config data into Cfg struct
 		err := viper.Unmarshal(&Cfg)
 		if err != nil {
 			log.Fatalf("unable to decode into struct, %v", err)
