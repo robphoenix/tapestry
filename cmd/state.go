@@ -32,11 +32,11 @@ func DesiredState() (*tapestry.State, error) {
 
 // ActualState instantiates a state object, from ACI API request data,
 // representing the actual state
-func ActualState() *tapestry.State {
+func ActualState(c *aci.Client) (*tapestry.State, error) {
 	s := tapestry.NewState()
 
 	// nodes
-	ns, err := aci.ListNodes(apicClient)
+	ns, err := aci.ListNodes(c)
 	if err != nil {
 		return nil, fmt.Errorf("get ACI nodes: %v", err)
 	}
@@ -45,13 +45,13 @@ func ActualState() *tapestry.State {
 	s.SetNodes(ns)
 
 	// actual tenant state
-	ts, err := aci.ListTenants(apicClient)
+	ts, err := aci.ListTenants(c)
 	if err != nil {
 		return nil, fmt.Errorf("get ACI tenants: %v", err)
 	}
 	// filter tenants
 	ts = filterTenants(ts)
-	s.SetTenants(gotTenants)
+	s.SetTenants(ts)
 
 	return s, nil
 }

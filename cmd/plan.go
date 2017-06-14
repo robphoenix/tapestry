@@ -45,28 +45,24 @@ func plan(cmd *cobra.Command, args []string) {
 	fmt.Printf("\nRefreshing APIC state in-memory prior to plan...\n")
 	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
 
-	// desired node state
-	wantNodes, err := tapestry.GetDeclaredNodes(nodeDataFile)
+	// state
+	desired, err := DesiredState()
+	if err != nil {
+		log.Fatal(err)
+	}
+	actual, err := ActualState(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// actual node state
-	aciNodes, err := aci.ListNodes(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// filter out controllers
-	var gotNodes []aci.Node
-	for _, n := range aciNodes {
-		if n.Role != "controller" {
-			gotNodes = append(gotNodes, n)
-		}
-	}
+	wantNodes := desired.Nodes()
+	wantTenants := desired.Tenants()
+	gotNodes := actual.Nodes()
+	gotTenants := actual.Tenants()
 
 	// actions to take
+	// node
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
-
 	fmt.Printf("Nodes\n=====\n\n")
 	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(nodeActions.Delete), len(nodeActions.Create))
 	for _, v := range nodeActions.Delete {
@@ -78,28 +74,8 @@ func plan(cmd *cobra.Command, args []string) {
 	for _, v := range nodeActions.Create {
 		fmt.Printf("Create -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 	}
-
-	// desired tenant state
-	wantTenants, err := tapestry.GetDeclaredTenants(tenantDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// determine actual tenant state
-	aciTenants, err := aci.ListTenants(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var gotTenants []aci.Tenant
-	for _, t := range aciTenants {
-		if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
-			gotTenants = append(gotTenants, t)
-		}
-	}
-
-	// determine actions to take
+	// tenant
 	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
-
 	fmt.Printf("\nTenants\n=======\n\n")
 	fmt.Printf("Plan: %d to delete, %d to create\n\n", len(tenantActions.Delete), len(tenantActions.Create))
 	for _, v := range tenantActions.Delete {
@@ -111,6 +87,9 @@ func plan(cmd *cobra.Command, args []string) {
 	for _, v := range tenantActions.Create {
 		fmt.Printf("Create -> %s\n", v.Name)
 	}
+
+	fmt.Printf("desired = %+v\n", desired)
+	fmt.Printf("actual = %+v\n", actual)
 
 	// summary
 	fmt.Printf("\nSummary\n=======\n\n")
