@@ -27,17 +27,6 @@ type NodesActions struct {
 	Delete []aci.Node
 }
 
-// nodesStructMap builds a hash map of nodes
-// indexed by Serial number
-func nodesStructMap(ns []aci.Node) map[string]aci.Node {
-	m := make(map[string]aci.Node, len(ns))
-	for _, n := range ns {
-		key := n.Serial + n.ID + n.Name
-		m[key] = n
-	}
-	return m
-}
-
 // GetDeclaredNodes instantiates a new Nodes struct from a csv data file
 func GetDeclaredNodes() ([]aci.Node, error) {
 	csvFile, err := os.Open(dataFile)
@@ -66,8 +55,14 @@ func GetDeclaredNodes() ([]aci.Node, error) {
 
 // DiffNodeStates determines which nodes need to be added, deleted or modified
 func DiffNodeStates(desired []aci.Node, actual []aci.Node) NodesActions {
-	dm := nodesStructMap(desired)
-	am := nodesStructMap(actual)
+	dm := make(map[string]aci.Node, len(desired))
+	for _, d := range desired {
+		dm[d.Key()] = d.Value()
+	}
+	am := make(map[string]aci.Node, len(desired))
+	for _, a := range actual {
+		am[a.Key()] = a.Value()
+	}
 	var na NodesActions
 
 	// add

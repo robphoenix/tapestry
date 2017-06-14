@@ -23,16 +23,6 @@ type TenantsActions struct {
 	Delete []aci.Tenant
 }
 
-// tenantsStructMap builds a hash map of tenants
-// indexed by name
-func tenantsStructMap(ts []aci.Tenant) map[string]aci.Tenant {
-	m := make(map[string]aci.Tenant, len(ts))
-	for _, t := range ts {
-		m[t.Name] = t
-	}
-	return m
-}
-
 // GetDeclaredTenants fetches tenant data from file
 func GetDeclaredTenants() ([]aci.Tenant, error) {
 	csvFile, err := os.Open(tenantDataFile)
@@ -57,8 +47,14 @@ func GetDeclaredTenants() ([]aci.Tenant, error) {
 
 // DiffTenantStates determines which tenants need to be added, deleted or modified
 func DiffTenantStates(desired, actual []aci.Tenant) TenantsActions {
-	dm := tenantsStructMap(desired)
-	am := tenantsStructMap(actual)
+	dm := make(map[string]aci.Tenant, len(desired))
+	for _, d := range desired {
+		dm[d.Key()] = d.Value()
+	}
+	am := make(map[string]aci.Tenant, len(desired))
+	for _, a := range actual {
+		am[a.Key()] = a.Value()
+	}
 	var ta TenantsActions
 
 	// add
