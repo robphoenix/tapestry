@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/tapestry"
 	"github.com/spf13/cobra"
 )
@@ -33,28 +32,25 @@ var planCmd = &cobra.Command{
 func plan(cmd *cobra.Command, args []string) {
 
 	// authenticate
-	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
+	apicClient, err := tapestry.Login(Cfg.URL, Cfg.Username, Cfg.Password)
 	if err != nil {
-		log.Fatalf("could not create ACI client: %v", err)
-	}
-	err = apicClient.Login()
-	if err != nil {
-		log.Fatalf("could not login: %v", err)
+		log.Fatalf("login: %v", err)
 	}
 
 	fmt.Printf("\nRefreshing APIC state in-memory prior to plan...\n")
 	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
 
 	// state
-	desired, err := DesiredState()
+	desired, err := desiredState()
 	if err != nil {
 		log.Fatal(err)
 	}
-	actual, err := ActualState(apicClient)
+	actual, err := actualState(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// temporary
 	wantNodes := desired.Nodes()
 	wantTenants := desired.Tenants()
 	gotNodes := actual.Nodes()
@@ -87,9 +83,6 @@ func plan(cmd *cobra.Command, args []string) {
 	for _, v := range tenantActions.Create {
 		fmt.Printf("Create -> %s\n", v.Name)
 	}
-
-	fmt.Printf("desired = %+v\n", desired)
-	fmt.Printf("actual = %+v\n", actual)
 
 	// summary
 	fmt.Printf("\nSummary\n=======\n\n")

@@ -35,31 +35,25 @@ func apply(cmd *cobra.Command, args []string) {
 	var nCreated, nDeleted, tCreated, tDeleted int
 
 	// authenticate
-	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
+	apicClient, err := tapestry.Login(Cfg.URL, Cfg.Username, Cfg.Password)
 	if err != nil {
-		log.Fatalf("could not create ACI client: %v", err)
-	}
-	err = apicClient.Login()
-	if err != nil {
-		log.Fatalf("could not login: %v", err)
+		log.Fatalf("login: %v", err)
 	}
 
-	// desired node state
-	wantNodes, err := tapestry.GetDeclaredNodes(nodeDataFile)
+	// state
+	desired, err := desiredState()
 	if err != nil {
 		log.Fatal(err)
 	}
-	// actual node state
-	aciNodes, err := aci.ListNodes(apicClient)
+	actual, err := actualState(apicClient)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var gotNodes []aci.Node
-	for _, n := range aciNodes {
-		if n.Role != "controller" {
-			gotNodes = append(gotNodes, n)
-		}
-	}
+
+	wantNodes := desired.Nodes()
+	wantTenants := desired.Tenants()
+	gotNodes := actual.Nodes()
+	gotTenants := actual.Tenants()
 
 	// actions to take
 	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
@@ -91,23 +85,6 @@ func apply(cmd *cobra.Command, args []string) {
 			for _, v := range nodeActions.Create {
 				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
 			}
-		}
-	}
-
-	// desired tenant state
-	wantTenants, err := tapestry.GetDeclaredTenants(tenantDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// actual tenant state
-	aciTenants, err := aci.ListTenants(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var gotTenants []aci.Tenant
-	for _, t := range aciTenants {
-		if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
-			gotTenants = append(gotTenants, t)
 		}
 	}
 

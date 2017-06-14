@@ -1,4 +1,4 @@
-package cmd
+package tapestry
 
 import (
 	"fmt"
@@ -6,8 +6,9 @@ import (
 	"github.com/robphoenix/go-aci/aci"
 )
 
-func login() (*aci.Client, error) {
-	c, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
+// Login authenticates with the ACI server
+func Login(u, n, p string) (*aci.Client, error) {
+	c, err := aci.NewClient(u, n, p)
 	if err != nil {
 		return nil, fmt.Errorf("could not create ACI client: %v", err)
 	}

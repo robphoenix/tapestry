@@ -7,9 +7,9 @@ import (
 	"github.com/robphoenix/tapestry/tapestry"
 )
 
-// DesiredState instantiates a state object, from given data,
+// desiredState instantiates a state object, from given data,
 // representing the desired state
-func DesiredState() (*tapestry.State, error) {
+func desiredState() (*tapestry.State, error) {
 	s := tapestry.NewState()
 
 	// nodes
@@ -30,9 +30,9 @@ func DesiredState() (*tapestry.State, error) {
 	return s, nil
 }
 
-// ActualState instantiates a state object, from ACI API request data,
+// actualState instantiates a state object, from ACI API request data,
 // representing the actual state
-func ActualState(c *aci.Client) (*tapestry.State, error) {
+func actualState(c *aci.Client) (*tapestry.State, error) {
 	s := tapestry.NewState()
 
 	// nodes
