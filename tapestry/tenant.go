@@ -8,10 +8,6 @@ import (
 	"github.com/robphoenix/go-aci/aci"
 )
 
-const (
-	tenantDataFile = "data/tenant.csv"
-)
-
 // Tenant ...
 type Tenant struct {
 	Name string `csv:"Name"`
@@ -34,10 +30,10 @@ func tenantsStructMap(ts []aci.Tenant) map[string]aci.Tenant {
 }
 
 // GetDeclaredTenants fetches tenant data from file
-func GetDeclaredTenants() ([]aci.Tenant, error) {
-	csvFile, err := os.Open(tenantDataFile)
+func GetDeclaredTenants(f string) ([]aci.Tenant, error) {
+	csvFile, err := os.Open(f)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", tenantDataFile, err)
+		return nil, fmt.Errorf("failed to open %s: %v", f, err)
 	}
 	defer csvFile.Close()
 

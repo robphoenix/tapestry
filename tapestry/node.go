@@ -8,10 +8,6 @@ import (
 	"github.com/robphoenix/go-aci/aci"
 )
 
-const (
-	dataFile = "data/fabric_membership.csv"
-)
-
 // Node ...
 type Node struct {
 	Name   string `csv:"Name"`
@@ -39,10 +35,10 @@ func nodesStructMap(ns []aci.Node) map[string]aci.Node {
 }
 
 // GetDeclaredNodes instantiates a new Nodes struct from a csv data file
-func GetDeclaredNodes() ([]aci.Node, error) {
-	csvFile, err := os.Open(dataFile)
+func GetDeclaredNodes(f string) ([]aci.Node, error) {
+	csvFile, err := os.Open(f)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %v", dataFile, err)
+		return nil, fmt.Errorf("failed to open %s: %v", f, err)
 	}
 	defer csvFile.Close()
 

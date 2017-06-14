@@ -22,6 +22,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	nodeDataFile   = "data/fabric_membership.csv"
+	tenantDataFile = "data/tenant.csv"
+)
+
 var (
 	// Cfg holds APIC configuration details
 	Cfg config

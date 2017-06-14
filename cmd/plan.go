@@ -46,7 +46,7 @@ func plan(cmd *cobra.Command, args []string) {
 	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
 
 	// desired node state
-	wantNodes, err := tapestry.GetDeclaredNodes()
+	wantNodes, err := tapestry.GetDeclaredNodes(nodeDataFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func plan(cmd *cobra.Command, args []string) {
 	}
 
 	// desired tenant state
-	wantTenants, err := tapestry.GetDeclaredTenants()
+	wantTenants, err := tapestry.GetDeclaredTenants(tenantDataFile)
 	if err != nil {
 		log.Fatal(err)
 	}
