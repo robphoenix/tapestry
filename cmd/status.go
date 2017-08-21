@@ -13,60 +13,52 @@
 
 package cmd
 
-import (
-	"fmt"
-	"log"
-
-	"github.com/robphoenix/go-aci/aci"
-	"github.com/spf13/cobra"
-)
-
-// statusCmd represents the status command
-var statusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Get current status of ACI fabric.",
-	Long:  `Get current status of ACI fabric.`,
-	Run:   status,
-}
-
-func status(cmd *cobra.Command, args []string) {
-
-	// authenticate
-	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
-	if err != nil {
-		log.Fatalf("could not create ACI client: %v", err)
-	}
-	err = apicClient.Login()
-	if err != nil {
-		log.Fatalf("could not login: %v", err)
-	}
-
-	fmt.Printf("\nRefreshing APIC state in-memory...\n")
-	fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
-
-	// get status of fabric nodes
-	ns, err := aci.ListNodes(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// print current nodes
-	fmt.Printf("Nodes\n=====\n\n")
-	for _, n := range ns {
-		if n.Role != "controller" {
-			fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name, n.ID, n.Serial)
-		}
-	}
-
-	// get status of tenants
-	ts, err := aci.ListTenants(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("\nTenants\n=======\n\n")
-	for _, t := range ts {
-		fmt.Printf("%s\n", t.Name)
-	}
-
-}
+// // statusCmd represents the runStatus command
+// var statusCmd = &cobra.Command{
+//         Use:   "status",
+//         Short: "Get current status of ACI fabric.",
+//         Long:  `Get current status of ACI fabric.`,
+//         Run:   runStatus,
+// }
+//
+// func runStatus(cmd *cobra.Command, args []string) {
+//
+//         // authenticate
+//         apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
+//         if err != nil {
+//                 log.Fatalf("could not create ACI client: %v", err)
+//         }
+//         err = apicClient.Login()
+//         if err != nil {
+//                 log.Fatalf("could not login: %v", err)
+//         }
+//
+//         fmt.Printf("\nRefreshing APIC state in-memory...\n")
+//         fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
+//
+//         // get runStatus of fabric nodes
+//         ns, err := aci.ListNodes(apicClient)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//
+//         // print current nodes
+//         fmt.Printf("Nodes\n=====\n\n")
+//         for _, n := range ns {
+//                 if n.Role != "controller" {
+//                         fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name, n.ID, n.Serial)
+//                 }
+//         }
+//
+//         // get runStatus of tenants
+//         ts, err := aci.ListTenants(apicClient)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//
+//         fmt.Printf("\nTenants\n=======\n\n")
+//         for _, t := range ts {
+//                 fmt.Printf("%s\n", t.Name)
+//         }
+//
+// }

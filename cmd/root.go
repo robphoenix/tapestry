@@ -18,35 +18,18 @@ import (
 	"log"
 	"os"
 
+	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-const (
-	nodeDataFile   = "data/fabric_membership.csv"
-	tenantDataFile = "data/tenant.csv"
-)
+var cfg config.Config
 
-var (
-	// Cfg holds APIC configuration details
-	Cfg config
-	// RootCmd represents the base command when called without any subcommands
-	RootCmd = &cobra.Command{
-		Use:   "tapestry",
-		Short: "Weave a Cisco ACI fabric",
-		Long:  `Tapestry is a CLI tool for declaring and deploying your Cisco ACI fabric.`,
-	}
-)
-
-type config struct {
-	APIC
-}
-
-// APIC holds all the APIC configuration details
-type APIC struct {
-	URL      string
-	Username string
-	Password string
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
+	Use:   "tapestry",
+	Short: "Weave a Cisco ACI fabric",
+	Long:  `Tapestry is a CLI tool for declaring and deploying your Cisco ACI fabric.`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -54,10 +37,10 @@ type APIC struct {
 func Execute() {
 
 	// add child commands to root command
-	RootCmd.AddCommand(statusCmd)
-	RootCmd.AddCommand(planCmd)
-	RootCmd.AddCommand(applyCmd)
-	RootCmd.AddCommand(destroyCmd)
+	// RootCmd.AddCommand(statusCmd)
+	// RootCmd.AddCommand(planCmd)
+	// RootCmd.AddCommand(applyCmd)
+	// RootCmd.AddCommand(destroyCmd)
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -71,16 +54,18 @@ func init() {
 
 // initConfig reads in config file
 func initConfig() {
-	viper.SetConfigName("config") // name of config file (without extension)
-	viper.AddConfigPath(".")      // look for config in the working directory
+	viper.SetConfigName("Tapestry") // name of config file (without extension)
+	viper.AddConfigPath(".")        // look for config in the working directory
+	viper.SetConfigType("toml")
 
 	// read in config file
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatal(err)
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Println("Can't read config:", err)
+		os.Exit(1)
 	}
+
 	// unmarshal config data
-	err = viper.Unmarshal(&Cfg)
+	err := viper.Unmarshal(&cfg)
 	if err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}

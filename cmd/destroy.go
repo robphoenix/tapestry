@@ -13,118 +13,118 @@
 
 package cmd
 
-import (
-	"bufio"
-	"fmt"
-	"log"
-	"os"
-	"strings"
-
-	"github.com/robphoenix/go-aci/aci"
-	"github.com/spf13/cobra"
-)
-
-var destroyCmd = &cobra.Command{
-	Use:   "destroy",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		destroy()
-	},
-}
-
-func destroy() {
-	// declare counters
-	var nDeleted, tDeleted int
-
-	// destroy confirmation
-	prompt := "Do you really want to destroy?\n\n" +
-		"Tapestry will delete all your APIC configuration.\n" +
-		"There is no undo. Only 'yes' will be accepted to confirm.\n\n" +
-		"Enter value: "
-	fmt.Printf(prompt)
-	reader := bufio.NewReader(os.Stdin)
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %#v\n", err.Error())
-		os.Exit(1)
-	}
-	if strings.TrimSpace(response) != "yes" {
-		fmt.Printf("Destroy Cancelled.\n")
-		os.Exit(1)
-	}
-
-	// authenticate
-	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
-	if err != nil {
-		log.Fatalf("could not create ACI client: %v", err)
-	}
-	err = apicClient.Login()
-	if err != nil {
-		log.Fatalf("could not login: %v", err)
-	}
-
-	// get node state
-	aciNodes, err := aci.ListNodes(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var nodes []aci.Node
-	for _, n := range aciNodes {
-		if n.Role != "controller" {
-			nodes = append(nodes, n)
-		}
-	}
-
-	// delete nodes
-	if nodes != nil {
-		err = aci.DeleteNodes(apicClient, nodes)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err == nil {
-			nDeleted = len(nodes)
-			fmt.Printf("Deleting Nodes...\n\n")
-			for _, v := range nodes {
-				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
-			}
-		}
-	}
-
-	// get tenant state
-	aciTenants, err := aci.ListTenants(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var tenants []aci.Tenant
-	for _, t := range aciTenants {
-		if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
-			tenants = append(tenants, t)
-		}
-	}
-
-	// delete tenants
-	if tenants != nil {
-		fmt.Printf("\nDeleting Tenants...\n\n")
-		for _, v := range tenants {
-			err = aci.DeleteTenant(apicClient, v)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if err == nil {
-				tDeleted++
-				fmt.Printf("%s\n", v.Name)
-			}
-		}
-	}
-
-	// summary
-	fmt.Printf("\nSummary\n=======\n\n")
-	fmt.Printf("Nodes: %d deleted\n", nDeleted)
-	fmt.Printf("Tenants: %d deleted\n", tDeleted)
-}
+// import (
+//         "bufio"
+//         "fmt"
+//         "log"
+//         "os"
+//         "strings"
+//
+//         "github.com/robphoenix/go-aci/aci"
+//         "github.com/spf13/cobra"
+// )
+//
+// var destroyCmd = &cobra.Command{
+//         Use:   "destroy",
+//         Short: "A brief description of your command",
+//         Long: `A longer description that spans multiple lines and likely contains examples
+// and usage of using your command. For example:
+//
+// Cobra is a CLI library for Go that empowers applications.
+// This application is a tool to generate the needed files
+// to quickly create a Cobra application.`,
+//         Run: func(cmd *cobra.Command, args []string) {
+//                 destroy()
+//         },
+// }
+//
+// func destroy() {
+//         // declare counters
+//         var nDeleted, tDeleted int
+//
+//         // destroy confirmation
+//         prompt := "Do you really want to destroy?\n\n" +
+//                 "Tapestry will delete all your APIC configuration.\n" +
+//                 "There is no undo. Only 'yes' will be accepted to confirm.\n\n" +
+//                 "Enter value: "
+//         fmt.Printf(prompt)
+//         reader := bufio.NewReader(os.Stdin)
+//         response, err := reader.ReadString('\n')
+//         if err != nil {
+//                 fmt.Fprintf(os.Stderr, "Error: %#v\n", err.Error())
+//                 os.Exit(1)
+//         }
+//         if strings.TrimSpace(response) != "yes" {
+//                 fmt.Printf("Destroy Cancelled.\n")
+//                 os.Exit(1)
+//         }
+//
+//         // authenticate
+//         apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
+//         if err != nil {
+//                 log.Fatalf("could not create ACI client: %v", err)
+//         }
+//         err = apicClient.Login()
+//         if err != nil {
+//                 log.Fatalf("could not login: %v", err)
+//         }
+//
+//         // get node state
+//         aciNodes, err := aci.ListNodes(apicClient)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//         var nodes []aci.Node
+//         for _, n := range aciNodes {
+//                 if n.Role != "controller" {
+//                         nodes = append(nodes, n)
+//                 }
+//         }
+//
+//         // delete nodes
+//         if nodes != nil {
+//                 err = aci.DeleteNodes(apicClient, nodes)
+//                 if err != nil {
+//                         log.Fatal(err)
+//                 }
+//                 if err == nil {
+//                         nDeleted = len(nodes)
+//                         fmt.Printf("Deleting Nodes...\n\n")
+//                         for _, v := range nodes {
+//                                 fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+//                         }
+//                 }
+//         }
+//
+//         // get tenant state
+//         aciTenants, err := aci.ListTenants(apicClient)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//         var tenants []aci.Tenant
+//         for _, t := range aciTenants {
+//                 if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
+//                         tenants = append(tenants, t)
+//                 }
+//         }
+//
+//         // delete tenants
+//         if tenants != nil {
+//                 fmt.Printf("\nDeleting Tenants...\n\n")
+//                 for _, v := range tenants {
+//                         err = aci.DeleteTenant(apicClient, v)
+//                         if err != nil {
+//                                 log.Fatal(err)
+//                         }
+//                         if err == nil {
+//                                 tDeleted++
+//                                 fmt.Printf("%s\n", v.Name)
+//                         }
+//                 }
+//         }
+//
+//         // summary
+//         fmt.Printf("\nSummary\n=======\n\n")
+//         fmt.Printf("Nodes: %d deleted\n", nDeleted)
+//         fmt.Printf("Tenants: %d deleted\n", tDeleted)
+// }

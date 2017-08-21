@@ -13,139 +13,139 @@
 
 package cmd
 
-import (
-	"fmt"
-	"log"
-
-	"github.com/robphoenix/go-aci/aci"
-	"github.com/robphoenix/tapestry/tapestry"
-	"github.com/spf13/cobra"
-)
-
-var applyCmd = &cobra.Command{
-	Use:   "apply",
-	Short: "Apply the declared state to the ACI fabric.",
-	Long:  `Apply the declared state to the ACI fabric.`,
-	Run:   apply,
-}
-
-func apply(cmd *cobra.Command, args []string) {
-
-	// declare counters
-	var nCreated, nDeleted, tCreated, tDeleted int
-
-	// authenticate
-	apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
-	if err != nil {
-		log.Fatalf("could not create ACI client: %v", err)
-	}
-	err = apicClient.Login()
-	if err != nil {
-		log.Fatalf("could not login: %v", err)
-	}
-
-	// desired node state
-	wantNodes, err := tapestry.GetDeclaredNodes(nodeDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// actual node state
-	aciNodes, err := aci.ListNodes(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var gotNodes []aci.Node
-	for _, n := range aciNodes {
-		if n.Role != "controller" {
-			gotNodes = append(gotNodes, n)
-		}
-	}
-
-	// actions to take
-	nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
-	// delete nodes
-	// do this first as we can't modify nodes that already exist
-	// so we have to delete and then re-add them
-	if nodeActions.Delete != nil {
-		err = aci.DeleteNodes(apicClient, nodeActions.Delete)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err == nil {
-			nDeleted = len(nodeActions.Delete)
-			fmt.Printf("Deleting Nodes...\n\n")
-			for _, v := range nodeActions.Delete {
-				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
-			}
-		}
-	}
-	// create nodes
-	if nodeActions.Create != nil {
-		err = aci.CreateNodes(apicClient, nodeActions.Create)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err == nil {
-			nCreated = len(nodeActions.Create)
-			fmt.Printf("Creating Nodes...\n\n")
-			for _, v := range nodeActions.Create {
-				fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
-			}
-		}
-	}
-
-	// desired tenant state
-	wantTenants, err := tapestry.GetDeclaredTenants(tenantDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// actual tenant state
-	aciTenants, err := aci.ListTenants(apicClient)
-	if err != nil {
-		log.Fatal(err)
-	}
-	var gotTenants []aci.Tenant
-	for _, t := range aciTenants {
-		if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
-			gotTenants = append(gotTenants, t)
-		}
-	}
-
-	// actions to take
-	tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
-	// delete tenants
-	// do this first as we can't modify nodes that already exist
-	// so we have to delete and then re-add them
-	if tenantActions.Delete != nil {
-		fmt.Printf("\nDeleting Tenants...\n\n")
-		for _, v := range tenantActions.Delete {
-			err = aci.DeleteTenant(apicClient, v)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if err == nil {
-				tDeleted++
-				fmt.Printf("%s\n", v.Name)
-			}
-		}
-	}
-	// create tenants
-	if tenantActions.Create != nil {
-		fmt.Printf("\nCreating Tenants...\n\n")
-		for _, v := range tenantActions.Create {
-			err = aci.CreateTenant(apicClient, v)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if err == nil {
-				tCreated++
-				fmt.Printf("%s\n", v.Name)
-			}
-		}
-	}
-
-	// summary
-	fmt.Printf("\nSummary\n=======\n\n")
-	fmt.Printf("Nodes: %d deleted, %d created\n", nDeleted, nCreated)
-	fmt.Printf("Tenants: %d deleted, %d created\n", tDeleted, tCreated)
-}
+// import (
+//         "fmt"
+//         "log"
+//
+//         "github.com/robphoenix/go-aci/aci"
+//         "github.com/robphoenix/tapestry/tapestry"
+//         "github.com/spf13/cobra"
+// )
+//
+// var applyCmd = &cobra.Command{
+//         Use:   "apply",
+//         Short: "Apply the declared state to the ACI fabric.",
+//         Long:  `Apply the declared state to the ACI fabric.`,
+//         Run:   apply,
+// }
+//
+// func apply(cmd *cobra.Command, args []string) {
+//
+//         // declare counters
+//         var nCreated, nDeleted, tCreated, tDeleted int
+//
+//         // authenticate
+//         apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
+//         if err != nil {
+//                 log.Fatalf("could not create ACI client: %v", err)
+//         }
+//         err = apicClient.Login()
+//         if err != nil {
+//                 log.Fatalf("could not login: %v", err)
+//         }
+//
+//         // desired node state
+//         wantNodes, err := tapestry.GetDeclaredNodes(nodeDataFile)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//         // actual node state
+//         aciNodes, err := aci.ListNodes(apicClient)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//         var gotNodes []aci.Node
+//         for _, n := range aciNodes {
+//                 if n.Role != "controller" {
+//                         gotNodes = append(gotNodes, n)
+//                 }
+//         }
+//
+//         // actions to take
+//         nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
+//         // delete nodes
+//         // do this first as we can't modify nodes that already exist
+//         // so we have to delete and then re-add them
+//         if nodeActions.Delete != nil {
+//                 err = aci.DeleteNodes(apicClient, nodeActions.Delete)
+//                 if err != nil {
+//                         log.Fatal(err)
+//                 }
+//                 if err == nil {
+//                         nDeleted = len(nodeActions.Delete)
+//                         fmt.Printf("Deleting Nodes...\n\n")
+//                         for _, v := range nodeActions.Delete {
+//                                 fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+//                         }
+//                 }
+//         }
+//         // create nodes
+//         if nodeActions.Create != nil {
+//                 err = aci.CreateNodes(apicClient, nodeActions.Create)
+//                 if err != nil {
+//                         log.Fatal(err)
+//                 }
+//                 if err == nil {
+//                         nCreated = len(nodeActions.Create)
+//                         fmt.Printf("Creating Nodes...\n\n")
+//                         for _, v := range nodeActions.Create {
+//                                 fmt.Printf("%s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
+//                         }
+//                 }
+//         }
+//
+//         // desired tenant state
+//         wantTenants, err := tapestry.GetDeclaredTenants(tenantDataFile)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//         // actual tenant state
+//         aciTenants, err := aci.ListTenants(apicClient)
+//         if err != nil {
+//                 log.Fatal(err)
+//         }
+//         var gotTenants []aci.Tenant
+//         for _, t := range aciTenants {
+//                 if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
+//                         gotTenants = append(gotTenants, t)
+//                 }
+//         }
+//
+//         // actions to take
+//         tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
+//         // delete tenants
+//         // do this first as we can't modify nodes that already exist
+//         // so we have to delete and then re-add them
+//         if tenantActions.Delete != nil {
+//                 fmt.Printf("\nDeleting Tenants...\n\n")
+//                 for _, v := range tenantActions.Delete {
+//                         err = aci.DeleteTenant(apicClient, v)
+//                         if err != nil {
+//                                 log.Fatal(err)
+//                         }
+//                         if err == nil {
+//                                 tDeleted++
+//                                 fmt.Printf("%s\n", v.Name)
+//                         }
+//                 }
+//         }
+//         // create tenants
+//         if tenantActions.Create != nil {
+//                 fmt.Printf("\nCreating Tenants...\n\n")
+//                 for _, v := range tenantActions.Create {
+//                         err = aci.CreateTenant(apicClient, v)
+//                         if err != nil {
+//                                 log.Fatal(err)
+//                         }
+//                         if err == nil {
+//                                 tCreated++
+//                                 fmt.Printf("%s\n", v.Name)
+//                         }
+//                 }
+//         }
+//
+//         // summary
+//         fmt.Printf("\nSummary\n=======\n\n")
+//         fmt.Printf("Nodes: %d deleted, %d created\n", nDeleted, nCreated)
+//         fmt.Printf("Tenants: %d deleted, %d created\n", tDeleted, tCreated)
+// }

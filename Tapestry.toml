@@ -10,49 +10,49 @@ id = 901
 name = "spine-901"
 pod = 1
 serial = "ABC2002W1XF"
-role = spine
+role = "spine"
 
 [[nodes]]
 id = 902
 name = "spine-902"
 pod = 1
 serial = "ABC2002W1WJ"
-role = spine
+role = "spine"
 
 [[nodes]]
 id = 111
 name = "leaf-111"
 pod = 1
 serial = "ABC1952T9YC"
-role = leaf
+role = "leaf"
 
 [[nodes]]
 id = 112
 name = "leaf-112"
 pod = 1
 serial = "ABC1952T92U"
-role = leaf
+role = "leaf"
 
 [[nodes]]
 id = 113
 name = "leaf-113"
 pod = 1
 serial = "ABC1952T93M"
-role = leaf
+role = "leaf"
 
 [[nodes]]
 id = 114
 name = "leaf-114"
 pod = 1
 serial = "ABC1950T9JZ"
-role = leaf
+role = "leaf"
 
 [[nodes]]
 id = 115
 name = "leaf-115"
 pod = 1
 serial = "ABC1952R531"
-role = leaf
+role = "leaf"
 
 # Geolocation
 [[sites]]
@@ -83,26 +83,26 @@ description = "Main Row"
 name = "rack-01"
 description = "Main Rack"
 
-[[sites]]
-name = "edinburgh"
-description = "Edinburgh Office"
-
-[[sites.buildings]]
-name = "building-01"
-description = "Main Building"
-
-[[sites.buildings.floors]]
-name = "floor-02"
-
-[[sites.buildings.floors.rooms]]
-name = "room-01"
-description = "Main Server Room"
-
-[[sites.buildings.floors.rooms.rows]]
-name = "row-01"
-description = "Main Row"
-
-[[sites.buildings.floors.rooms.rows.racks]]
-name = "rack-01"
-description = "Main Rack"
+# [[sites]]
+# name = "edinburgh"
+# description = "Edinburgh Office"
+#
+# [[sites.buildings]]
+# name = "building-01"
+# description = "Main Building"
+#
+# [[sites.buildings.floors]]
+# name = "floor-02"
+#
+# [[sites.buildings.floors.rooms]]
+# name = "room-01"
+# description = "Main Server Room"
+#
+# [[sites.buildings.floors.rooms.rows]]
+# name = "row-01"
+# description = "Main Row"
+#
+# [[sites.buildings.floors.rooms.rows.racks]]
+# name = "rack-01"
+# description = "Main Rack"
 
