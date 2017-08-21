@@ -13,52 +13,61 @@
 
 package cmd
 
-// // statusCmd represents the runStatus command
-// var statusCmd = &cobra.Command{
-//         Use:   "status",
-//         Short: "Get current status of ACI fabric.",
-//         Long:  `Get current status of ACI fabric.`,
-//         Run:   runStatus,
-// }
-//
-// func runStatus(cmd *cobra.Command, args []string) {
-//
-//         // authenticate
-//         apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
-//         if err != nil {
-//                 log.Fatalf("could not create ACI client: %v", err)
-//         }
-//         err = apicClient.Login()
-//         if err != nil {
-//                 log.Fatalf("could not login: %v", err)
-//         }
-//
-//         fmt.Printf("\nRefreshing APIC state in-memory...\n")
-//         fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
-//
-//         // get runStatus of fabric nodes
-//         ns, err := aci.ListNodes(apicClient)
-//         if err != nil {
-//                 log.Fatal(err)
-//         }
-//
-//         // print current nodes
-//         fmt.Printf("Nodes\n=====\n\n")
-//         for _, n := range ns {
-//                 if n.Role != "controller" {
-//                         fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name, n.ID, n.Serial)
-//                 }
-//         }
-//
-//         // get runStatus of tenants
-//         ts, err := aci.ListTenants(apicClient)
-//         if err != nil {
-//                 log.Fatal(err)
-//         }
-//
-//         fmt.Printf("\nTenants\n=======\n\n")
-//         for _, t := range ts {
-//                 fmt.Printf("%s\n", t.Name)
-//         }
-//
-// }
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/robphoenix/go-aci/aci"
+	"github.com/spf13/cobra"
+)
+
+// statusCmd represents the runStatus command
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Get current status of ACI fabric.",
+	Long:  `Get current status of ACI fabric.`,
+	Run:   runStatus,
+}
+
+func runStatus(cmd *cobra.Command, args []string) {
+
+	client, err := aci.NewClient(aci.Config{
+		Host:     cfg.URL,
+		Username: cfg.Username,
+		Password: cfg.Password,
+	})
+	if err != nil {
+		log.Fatalf("could not create ACI client: %v", err)
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+
+	err = client.Login(ctx)
+	if err != nil {
+		log.Fatalf("could not login: %v", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\nRefreshing APIC state in-memory...\n")
+	fmt.Printf("\nAPIC URL: %s\n\n", client.BaseURL)
+
+	// list nodes
+	nodes, err := client.FabricMembership.List(ctx)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	// print current nodes
+	fmt.Printf("Nodes\n=====\n\n")
+	for _, n := range nodes {
+		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name(), n.ID(), n.Serial())
+	}
+}
+
+func init() {
+	RootCmd.AddCommand(statusCmd)
+}

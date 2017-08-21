@@ -37,7 +37,6 @@ var RootCmd = &cobra.Command{
 func Execute() {
 
 	// add child commands to root command
-	// RootCmd.AddCommand(statusCmd)
 	// RootCmd.AddCommand(planCmd)
 	// RootCmd.AddCommand(applyCmd)
 	// RootCmd.AddCommand(destroyCmd)
