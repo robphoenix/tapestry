@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/spf13/cobra"
@@ -40,7 +39,6 @@ func runStatus(cmd *cobra.Command, args []string) {
 	})
 	if err != nil {
 		log.Fatalf("could not create ACI client: %v", err)
-		os.Exit(1)
 	}
 
 	ctx := context.Background()
@@ -48,17 +46,15 @@ func runStatus(cmd *cobra.Command, args []string) {
 	err = client.Login(ctx)
 	if err != nil {
 		log.Fatalf("could not login: %v", err)
-		os.Exit(1)
 	}
 
-	fmt.Printf("\nRefreshing APIC state in-memory...\n")
+	fmt.Printf("\nCollecting current APIC state...\n")
 	fmt.Printf("\nAPIC URL: %s\n\n", client.BaseURL)
 
 	// list nodes
 	nodes, err := client.FabricMembership.List(ctx)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatalf("could not list nodes: %v", err)
 	}
 
 	// print current nodes

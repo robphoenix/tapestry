@@ -13,107 +13,94 @@
 
 package cmd
 
-// import (
-//         "fmt"
-//         "log"
-//
-//         "github.com/robphoenix/go-aci/aci"
-//         "github.com/robphoenix/tapestry/tapestry"
-//         "github.com/spf13/cobra"
-// )
-//
-// // planCmd represents the plan command
-// var planCmd = &cobra.Command{
-//         Use:   "plan",
-//         Short: "Plan changes to ACI fabric",
-//         Long:  `Plan changes to ACI fabric.`,
-//         Run:   plan,
-// }
-//
-// func plan(cmd *cobra.Command, args []string) {
-//
-//         // authenticate
-//         apicClient, err := aci.NewClient(Cfg.URL, Cfg.Username, Cfg.Password)
-//         if err != nil {
-//                 log.Fatalf("could not create ACI client: %v", err)
-//         }
-//         err = apicClient.Login()
-//         if err != nil {
-//                 log.Fatalf("could not login: %v", err)
-//         }
-//
-//         fmt.Printf("\nRefreshing APIC state in-memory prior to plan...\n")
-//         fmt.Printf("\nAPIC URL: %s\n\n", apicClient.Host.Host)
-//
-//         // desired node state
-//         wantNodes, err := tapestry.GetDeclaredNodes(nodeDataFile)
-//         if err != nil {
-//                 log.Fatal(err)
-//         }
-//
-//         // actual node state
-//         aciNodes, err := aci.ListNodes(apicClient)
-//         if err != nil {
-//                 log.Fatal(err)
-//         }
-//         // filter out controllers
-//         var gotNodes []aci.Node
-//         for _, n := range aciNodes {
-//                 if n.Role != "controller" {
-//                         gotNodes = append(gotNodes, n)
-//                 }
-//         }
-//
-//         // actions to take
-//         nodeActions := tapestry.DiffNodeStates(wantNodes, gotNodes)
-//
-//         fmt.Printf("Nodes\n=====\n\n")
-//         fmt.Printf("Plan: %d to delete, %d to create\n\n", len(nodeActions.Delete), len(nodeActions.Create))
-//         for _, v := range nodeActions.Delete {
-//                 fmt.Printf("Delete -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
-//         }
-//         if nodeActions.Delete != nil {
-//                 fmt.Printf("\n")
-//         }
-//         for _, v := range nodeActions.Create {
-//                 fmt.Printf("Create -> %s [ID: %s Serial: %s]\n", v.Name, v.ID, v.Serial)
-//         }
-//
-//         // desired tenant state
-//         wantTenants, err := tapestry.GetDeclaredTenants(tenantDataFile)
-//         if err != nil {
-//                 log.Fatal(err)
-//         }
-//
-//         // determine actual tenant state
-//         aciTenants, err := aci.ListTenants(apicClient)
-//         if err != nil {
-//                 log.Fatal(err)
-//         }
-//         var gotTenants []aci.Tenant
-//         for _, t := range aciTenants {
-//                 if t.Name != "common" && t.Name != "infra" && t.Name != "mgmt" {
-//                         gotTenants = append(gotTenants, t)
-//                 }
-//         }
-//
-//         // determine actions to take
-//         tenantActions := tapestry.DiffTenantStates(wantTenants, gotTenants)
-//
-//         fmt.Printf("\nTenants\n=======\n\n")
-//         fmt.Printf("Plan: %d to delete, %d to create\n\n", len(tenantActions.Delete), len(tenantActions.Create))
-//         for _, v := range tenantActions.Delete {
-//                 fmt.Printf("Delete -> %s\n", v.Name)
-//         }
-//         if tenantActions.Delete != nil {
-//                 fmt.Printf("\n")
-//         }
-//         for _, v := range tenantActions.Create {
-//                 fmt.Printf("Create -> %s\n", v.Name)
-//         }
-//
-//         // summary
-//         fmt.Printf("\nSummary\n=======\n\n")
-//         fmt.Printf("Nodes: %d to delete, %d to create\n", len(nodeActions.Delete), len(nodeActions.Create))
-//         fmt.Printf("Tenants: %d to delete, %d to create\n", len(tenantActions.Delete), len(tenantActions.Create))
-// }
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/robphoenix/go-aci/aci"
+	"github.com/spf13/cobra"
+)
+
+// planCmd represents the plan command
+var planCmd = &cobra.Command{
+	Use:   "plan",
+	Short: "Plan changes to ACI fabric",
+	Long:  `Plan changes to ACI fabric.`,
+	Run:   runPlan,
+}
+
+func runPlan(cmd *cobra.Command, args []string) {
+
+	client, err := aci.NewClient(aci.Config{
+		Host:     cfg.URL,
+		Username: cfg.Username,
+		Password: cfg.Password,
+	})
+	if err != nil {
+		log.Fatalf("could not create ACI client: %v", err)
+	}
+
+	ctx := context.Background()
+
+	err = client.Login(ctx)
+	if err != nil {
+		log.Fatalf("could not login: %v", err)
+	}
+
+	fmt.Printf("\nRefreshing APIC state in-memory...\n")
+	fmt.Printf("\nAPIC URL: %s\n\n", client.BaseURL)
+
+	// desired node state
+	var wantNodes []*aci.Node
+	for _, node := range cfg.Nodes {
+		n, err := client.FabricMembership.NewNode(
+			node.Name,
+			node.ID,
+			node.Pod,
+			node.Serial,
+			node.Role,
+		)
+		if err != nil {
+			log.Fatalf("invalid node: %v", err)
+		}
+		wantNodes = append(wantNodes, n)
+	}
+
+	fmt.Printf("Desired Nodes\n=====\n\n")
+	for _, n := range wantNodes {
+		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name(), n.ID(), n.Serial())
+	}
+	fmt.Printf("\n")
+
+	// actual node state
+	nodes, err := client.FabricMembership.List(ctx)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	var gotNodes []*aci.Node
+	for _, n := range nodes {
+		if n.Role() != "controller" {
+			gotNodes = append(gotNodes, n)
+		}
+	}
+
+	// print actual nodes
+	fmt.Printf("Actual Nodes\n=====\n\n")
+	for _, n := range gotNodes {
+		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name(), n.ID(), n.Serial())
+	}
+	fmt.Printf("\n")
+
+	//TODO diff desired & actual
+
+	//         // summary
+	//         fmt.Printf("\nSummary\n=======\n\n")
+	//         fmt.Printf("Nodes: %d to delete, %d to create\n", len(nodeActions.Delete), len(nodeActions.Create))
+	//         fmt.Printf("Tenants: %d to delete, %d to create\n", len(tenantActions.Delete), len(tenantActions.Create))
+}
+
+func init() {
+	RootCmd.AddCommand(planCmd)
+}

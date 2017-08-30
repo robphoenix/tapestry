@@ -14,7 +14,7 @@ type APIC struct {
 }
 
 type Node struct {
-	ID     int
+	ID     string
 	Name   string
 	Pod    string
 	Serial string
