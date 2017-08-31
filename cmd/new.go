@@ -34,7 +34,8 @@ var newCmd = &cobra.Command{
 }
 
 func runNew(cmd *cobra.Command, args []string) {
-	dir := filepath.Join(".", args[0])
+	// TODO validate directory names
+	dir := args[0]
 
 	if info, _ := os.Stat(dir); info != nil {
 		fmt.Printf("directory already exists: %s\n", dir)

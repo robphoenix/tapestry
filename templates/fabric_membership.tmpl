@@ -1,0 +1,10 @@
+{{define "title"}}Fabric Membership{{end}}
+{{define "content"}}
+    <h2>Nodes</h2>
+        <ul>
+            {{- range .}}
+                <li>{{.Name}} {{.ID}} {{.Serial}}</li>
+            {{- end}}
+        </ul>
+{{end}}
+

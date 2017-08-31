@@ -15,8 +15,10 @@ package cmd
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -33,15 +35,45 @@ func runEditor(cmd *cobra.Command, args []string) {
 	fmt.Println("editor called")
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/apic", apicHandler)
+	http.HandleFunc("/fabric-membership", fabricMembershipHandler)
+	http.HandleFunc("/geolocation", geolocationHandler)
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Tapestry.")
+	base := filepath.Join("templates", "base.tmpl")
+	content := filepath.Join("templates", "index.tmpl")
+	var tmpl = template.Must(template.ParseFiles(base, content))
+	if err := tmpl.Execute(w, ""); err != nil {
+		log.Println(err)
+	}
 }
 
 func apicHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%+v", cfg.APIC)
+	base := filepath.Join("templates", "base.tmpl")
+	content := filepath.Join("templates", "apic.tmpl")
+	var tmpl = template.Must(template.ParseFiles(base, content))
+	if err := tmpl.Execute(w, cfg.APIC); err != nil {
+		log.Println(err)
+	}
+}
+
+func fabricMembershipHandler(w http.ResponseWriter, r *http.Request) {
+	base := filepath.Join("templates", "base.tmpl")
+	content := filepath.Join("templates", "fabric_membership.tmpl")
+	var tmpl = template.Must(template.ParseFiles(base, content))
+	if err := tmpl.Execute(w, cfg.Nodes); err != nil {
+		log.Println(err)
+	}
+}
+
+func geolocationHandler(w http.ResponseWriter, r *http.Request) {
+	base := filepath.Join("templates", "base.tmpl")
+	content := filepath.Join("templates", "geolocation.tmpl")
+	var tmpl = template.Must(template.ParseFiles(base, content))
+	if err := tmpl.Execute(w, cfg.Sites); err != nil {
+		log.Println(err)
+	}
 }
 
 func init() {
