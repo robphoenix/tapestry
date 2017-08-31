@@ -41,8 +41,8 @@ func runEditor(cmd *cobra.Command, args []string) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	base := filepath.Join("templates", "base.tmpl")
-	content := filepath.Join("templates", "index.tmpl")
+	base := filepath.Join("templates", "base.html.tmpl")
+	content := filepath.Join("templates", "index.html.tmpl")
 	var tmpl = template.Must(template.ParseFiles(base, content))
 	if err := tmpl.Execute(w, ""); err != nil {
 		log.Println(err)
@@ -50,8 +50,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func apicHandler(w http.ResponseWriter, r *http.Request) {
-	base := filepath.Join("templates", "base.tmpl")
-	content := filepath.Join("templates", "apic.tmpl")
+	base := filepath.Join("templates", "base.html.tmpl")
+	content := filepath.Join("templates", "apic.html.tmpl")
 	var tmpl = template.Must(template.ParseFiles(base, content))
 	if err := tmpl.Execute(w, cfg.APIC); err != nil {
 		log.Println(err)
@@ -59,8 +59,8 @@ func apicHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func fabricMembershipHandler(w http.ResponseWriter, r *http.Request) {
-	base := filepath.Join("templates", "base.tmpl")
-	content := filepath.Join("templates", "fabric_membership.tmpl")
+	base := filepath.Join("templates", "base.html.tmpl")
+	content := filepath.Join("templates", "fabric_membership.html.tmpl")
 	var tmpl = template.Must(template.ParseFiles(base, content))
 	if err := tmpl.Execute(w, cfg.Nodes); err != nil {
 		log.Println(err)
@@ -68,8 +68,8 @@ func fabricMembershipHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func geolocationHandler(w http.ResponseWriter, r *http.Request) {
-	base := filepath.Join("templates", "base.tmpl")
-	content := filepath.Join("templates", "geolocation.tmpl")
+	base := filepath.Join("templates", "base.html.tmpl")
+	content := filepath.Join("templates", "geolocation.html.tmpl")
 	var tmpl = template.Must(template.ParseFiles(base, content))
 	if err := tmpl.Execute(w, cfg.Sites); err != nil {
 		log.Println(err)

@@ -1,0 +1,25 @@
+{{define "title"}}
+    Login details
+{{end}}
+{{define "content"}}
+<form>
+    <label>URL:</label>
+<input id="URL" type="text" value="{{.URL}}" name="url" readonly="readonly">
+        <input id="editURL" name="Edit" type="button" value="Edit">
+    <label>Username: </label>
+    <input type="text" value="{{.Username}}" name="username" readonly="readonly">
+    <input id="edit" name="Edit" type="button" value="Edit">
+    <label>Password: </label>
+    <input type="text" value="{{.Password}}" name="password" readonly="readonly">
+    <input id="edit" name="Edit" type="button" value="Edit">
+    <input type="submit" value="Submit">
+</form>
+{{end}}
+{{define "js"}}
+    <script type="javascript">
+        document.getElementById("editURL").onclick = function () {
+            console.log("clicked")
+            document.getElementById("URL").readOnly = false;
+        };
+    </script>
+{{end}}
