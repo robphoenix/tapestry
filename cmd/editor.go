@@ -16,11 +16,15 @@ package cmd
 import (
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 
+	toml "github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // editorCmd represents the editor command
@@ -50,11 +54,41 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func apicHandler(w http.ResponseWriter, r *http.Request) {
-	base := filepath.Join("templates", "base.html.tmpl")
-	content := filepath.Join("templates", "apic.html.tmpl")
-	var tmpl = template.Must(template.ParseFiles(base, content))
-	if err := tmpl.Execute(w, cfg.APIC); err != nil {
-		log.Println(err)
+	switch r.Method {
+	case "GET":
+		base := filepath.Join("templates", "base.html.tmpl")
+		content := filepath.Join("templates", "apic.html.tmpl")
+		var tmpl = template.Must(template.ParseFiles(base, content))
+		if err := tmpl.Execute(w, cfg.APIC); err != nil {
+			log.Println(err)
+		}
+	case "POST":
+		r.ParseForm()
+		vals := r.PostForm
+		url := vals["url"]
+		fmt.Printf("url = %+v\n", url)
+		user := vals["username"]
+		pass := vals["password"]
+		fmt.Println(r.PostForm)
+		cfg.APIC.URL = url[0]
+		cfg.APIC.Username = user[0]
+		cfg.APIC.Password = pass[0]
+
+		b, err := toml.Marshal(cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(b))
+		err = ioutil.WriteFile(viper.ConfigFileUsed(), b, os.FileMode(0644))
+		if err != nil {
+			log.Fatal(err)
+		}
+		base := filepath.Join("templates", "base.html.tmpl")
+		content := filepath.Join("templates", "apic.html.tmpl")
+		var tmpl = template.Must(template.ParseFiles(base, content))
+		if err := tmpl.Execute(w, cfg.APIC); err != nil {
+			log.Println(err)
+		}
 	}
 }
 

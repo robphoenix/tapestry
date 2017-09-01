@@ -5,51 +5,51 @@
   username = "admin"
 
 [[nodes]]
-  id = 901
+  id = "901"
   name = "spine-901"
-  pod = 1
+  pod = "1"
   role = "spine"
   serial = "ABC2002W1XF"
 
 [[nodes]]
-  id = 902
+  id = "902"
   name = "spine-902"
-  pod = 1
+  pod = "1"
   role = "spine"
   serial = "ABC2002W1WJ"
 
 [[nodes]]
-  id = 111
+  id = "111"
   name = "leaf-111"
-  pod = 1
+  pod = "1"
   role = "leaf"
   serial = "ABC1952T9YC"
 
 [[nodes]]
-  id = 112
+  id = "112"
   name = "leaf-112"
-  pod = 1
+  pod = "1"
   role = "leaf"
   serial = "ABC1952T92U"
 
 [[nodes]]
-  id = 113
+  id = "113"
   name = "leaf-113"
-  pod = 1
+  pod = "1"
   role = "leaf"
   serial = "ABC1952T93M"
 
 [[nodes]]
-  id = 114
+  id = "114"
   name = "leaf-114"
-  pod = 1
+  pod = "1"
   role = "leaf"
   serial = "ABC1950T9JZ"
 
 [[nodes]]
-  id = 115
+  id = "115"
   name = "leaf-115"
-  pod = 1
+  pod = "1"
   role = "leaf"
   serial = "ABC1952R531"
 
