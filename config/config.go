@@ -2,56 +2,56 @@ package config
 
 // Config ...
 type Config struct {
-	APIC
-	Nodes []Node
-	Sites []Site
+	APIC  `toml:"apic"`
+	Nodes []Node `toml:"nodes"`
+	Sites []Site `toml:"sites"`
 }
 
 type APIC struct {
-	URL      string
-	Username string
-	Password string
+	URL      string `toml:"url"`
+	Username string `toml:"username"`
+	Password string `toml:"password"`
 }
 
 type Node struct {
-	ID     string
-	Name   string
-	Pod    string
-	Serial string
-	Role   string
+	ID     string `toml:"id"`
+	Name   string `toml:"name"`
+	Pod    string `toml:"pod"`
+	Serial string `toml:"serial"`
+	Role   string `toml:"role"`
 }
 
 type Site struct {
-	Name        string
-	Description string
-	Buildings   []Building
+	Name        string     `toml:"name"`
+	Description string     `toml:"description"`
+	Buildings   []Building `toml:"buildings"`
 }
 
 type Building struct {
-	Name        string
-	Description string
-	Floors      []Floor
+	Name        string  `toml:"name"`
+	Description string  `toml:"description"`
+	Floors      []Floor `toml:"floors"`
 }
 
 type Floor struct {
-	Name        string
-	Description string
-	Rooms       []Room
+	Name        string `toml:"name"`
+	Description string `toml:"description"`
+	Rooms       []Room `toml:"rooms"`
 }
 
 type Room struct {
-	Name        string
-	Description string
-	Rows        []Row
+	Name        string `toml:"name"`
+	Description string `toml:"description"`
+	Rows        []Row  `toml:"rows"`
 }
 
 type Row struct {
-	Name        string
-	Description string
-	Racks       []Rack
+	Name        string `toml:"name"`
+	Description string `toml:"description"`
+	Racks       []Rack `toml:"racks"`
 }
 
 type Rack struct {
-	Name        string
-	Description string
+	Name        string `toml:"name"`
+	Description string `toml:"description"`
 }
