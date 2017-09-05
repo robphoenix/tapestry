@@ -14,7 +14,6 @@
 package cmd
 
 import (
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -37,7 +36,6 @@ var editorCmd = &cobra.Command{
 }
 
 func runEditor(cmd *cobra.Command, args []string) {
-	fmt.Println("editor called")
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/apic", apicHandler)
 	http.HandleFunc("/fabric-membership", fabricMembershipHandler)
@@ -55,7 +53,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 func apicHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: this is broken
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatal(err)
@@ -72,10 +69,8 @@ func apicHandler(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		vals := r.PostForm
 		url := vals["url"]
-		fmt.Printf("url = %+v\n", url)
 		user := vals["username"]
 		pass := vals["password"]
-		fmt.Println(r.PostForm)
 		cfg.APIC.URL = url[0]
 		cfg.APIC.Username = user[0]
 		cfg.APIC.Password = pass[0]
@@ -84,7 +79,6 @@ func apicHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(string(b))
 		err = ioutil.WriteFile(viper.ConfigFileUsed(), b, os.FileMode(0644))
 		if err != nil {
 			log.Fatal(err)

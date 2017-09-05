@@ -16,8 +16,19 @@ type Config struct {
 func New() (Config, error) {
 	var cfg Config
 
-	err := cfg.Load()
-	fmt.Printf("cfg = %+v\n", cfg)
+	viper.SetConfigName("Tapestry")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("toml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		return cfg, fmt.Errorf("can't read config: %v", err)
+	}
+
+	err := viper.Unmarshal(&cfg)
+	if err != nil {
+		return cfg, fmt.Errorf("unable to decode into struct, %v", err)
+	}
+
 	return cfg, err
 }
 
@@ -30,24 +41,6 @@ func NewEmpty() Config {
 }
 
 // TODO: config.Write()
-
-// Load reads a viper configuration into the config.
-func (cfg Config) Load() error {
-	viper.SetConfigName("Tapestry")
-	viper.AddConfigPath(".")
-	viper.SetConfigType("toml")
-
-	if err := viper.ReadInConfig(); err != nil {
-		return fmt.Errorf("can't read config: %v", err)
-	}
-
-	err := viper.Unmarshal(&cfg)
-	if err != nil {
-		return fmt.Errorf("unable to decode into struct, %v", err)
-	}
-
-	return nil
-}
 
 type APIC struct {
 	URL      string `toml:"url"`
