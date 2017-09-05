@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 
 	toml "github.com/pelletier/go-toml"
+	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -51,9 +52,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if err := tmpl.Execute(w, ""); err != nil {
 		log.Println(err)
 	}
-}
 
+}
 func apicHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: this is broken
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 	switch r.Method {
 	case "GET":
 		base := filepath.Join("templates", "base.html.tmpl")
@@ -93,6 +99,10 @@ func apicHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func fabricMembershipHandler(w http.ResponseWriter, r *http.Request) {
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 	base := filepath.Join("templates", "base.html.tmpl")
 	content := filepath.Join("templates", "fabric_membership.html.tmpl")
 	var tmpl = template.Must(template.ParseFiles(base, content))
@@ -102,6 +112,10 @@ func fabricMembershipHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func geolocationHandler(w http.ResponseWriter, r *http.Request) {
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 	base := filepath.Join("templates", "base.html.tmpl")
 	content := filepath.Join("templates", "geolocation.html.tmpl")
 	var tmpl = template.Must(template.ParseFiles(base, content))

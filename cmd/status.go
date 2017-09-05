@@ -19,6 +19,7 @@ import (
 	"log"
 
 	"github.com/robphoenix/go-aci/aci"
+	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +32,10 @@ var statusCmd = &cobra.Command{
 }
 
 func runStatus(cmd *cobra.Command, args []string) {
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	client, err := aci.NewClient(aci.Config{
 		Host:     cfg.URL,

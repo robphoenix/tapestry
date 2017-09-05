@@ -15,11 +15,13 @@ package cmd
 
 import (
 	"fmt"
-	"html/template"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
+	toml "github.com/pelletier/go-toml"
+	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
 )
 
@@ -52,57 +54,20 @@ func runNew(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	tmpl, err := template.New("config").Parse(content)
+	cfg := config.NewEmpty()
+
+	b, err := toml.Marshal(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	tmpl.Execute(f, args[0])
+
+	err = ioutil.WriteFile(f.Name(), b, os.FileMode(0644))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Printf("new Tapestry project created: %s\n", dir)
 }
-
-const content = `
-# {{.}}
-
-# ACI APIC
-[apic]
-url = "example-apic.com"
-username = "admin"
-password = "password"
-
-# Fabric Membership
-[[nodes]]
-id = 101
-name = "leaf-901"
-pod = 1
-serial = "ABCDEF12345"
-role = "leaf"
-
-# Geolocation
-[[sites]]
-name = "site-01"
-description = "Site 01"
-
-[[sites.buildings]]
-name = "building-01"
-description = "Building 01"
-
-[[sites.buildings.floors]]
-name = "floor-01"
-description = "Floor 01"
-
-[[sites.buildings.floors.rooms]]
-name = "room-01"
-description = "Room 01"
-
-[[sites.buildings.floors.rooms.rows]]
-name = "row-01"
-description = "Row 01"
-
-[[sites.buildings.floors.rooms.rows.racks]]
-name = "rack-01"
-description = "Rack 01"
-`
 
 func init() {
 	RootCmd.AddCommand(newCmd)

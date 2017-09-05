@@ -15,15 +15,11 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var cfg config.Config
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -48,24 +44,5 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-}
-
-// initConfig reads in config file
-func initConfig() {
-	viper.SetConfigName("Tapestry") // name of config file (without extension)
-	viper.AddConfigPath(".")        // look for config in the working directory
-	viper.SetConfigType("toml")
-
-	// read in config file
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
-		os.Exit(1)
-	}
-
-	// unmarshal config data
-	err := viper.Unmarshal(&cfg)
-	if err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
-	}
+	viper.SetDefault("author", "Rob Phoenix <rob@robphoenix.com>")
 }
