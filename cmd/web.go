@@ -27,15 +27,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-// editorCmd represents the editor command
-var editorCmd = &cobra.Command{
-	Use:   "editor",
+// webCmd represents the editor command
+var webCmd = &cobra.Command{
+	Use:   "web",
 	Short: "Edit your Tapestry project configuration.",
 	Long:  `A web UI to visually edit your Tapestry project configuration.`,
-	Run:   runEditor,
+	Run:   runWeb,
 }
 
-func runEditor(cmd *cobra.Command, args []string) {
+func runWeb(cmd *cobra.Command, args []string) {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/apic", apicHandler)
 	http.HandleFunc("/fabric-membership", fabricMembershipHandler)
@@ -119,5 +119,5 @@ func geolocationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	RootCmd.AddCommand(editorCmd)
+	RootCmd.AddCommand(webCmd)
 }
