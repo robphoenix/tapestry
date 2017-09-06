@@ -19,11 +19,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/schema"
 	toml "github.com/pelletier/go-toml"
 	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+var decoder = schema.NewDecoder()
 
 // webCmd represents the editor command
 var webCmd = &cobra.Command{
@@ -51,24 +54,7 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		r.ParseForm()
 		vals := r.PostForm
-		if len(vals["apicSubmit"]) > 0 {
-			cfg.APIC.URL = vals["url"][0]
-			cfg.APIC.Username = vals["username"][0]
-			cfg.APIC.Password = vals["password"][0]
-		}
-		if len(vals["fabricMembershipSubmit"]) > 0 {
-			var ns []config.Node
-			for i := 0; i < len(vals["name"]); i++ {
-				ns = append(ns, config.Node{
-					ID:     vals["id"][i],
-					Name:   vals["name"][i],
-					Pod:    vals["pod"][i],
-					Serial: vals["serial"][i],
-					Role:   vals["role"][i],
-				})
-			}
-			cfg.Nodes = ns
-		}
+		decoder.Decode(&cfg, vals)
 
 		b, err := toml.Marshal(cfg)
 		if err != nil {
