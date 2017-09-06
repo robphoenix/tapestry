@@ -14,12 +14,10 @@
 package cmd
 
 import (
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	toml "github.com/pelletier/go-toml"
 	"github.com/robphoenix/tapestry/config"
@@ -36,44 +34,41 @@ var webCmd = &cobra.Command{
 }
 
 func runWeb(cmd *cobra.Command, args []string) {
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/apic", apicHandler)
-	http.HandleFunc("/fabric-membership", fabricMembershipHandler)
-	http.HandleFunc("/geolocation", geolocationHandler)
+	http.HandleFunc("/", webHandler)
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	base := filepath.Join("templates", "base.html.tmpl")
-	content := filepath.Join("templates", "index.html.tmpl")
-	var tmpl = template.Must(template.ParseFiles(base, content))
-	if err := tmpl.Execute(w, ""); err != nil {
-		log.Println(err)
-	}
-
-}
-func apicHandler(w http.ResponseWriter, r *http.Request) {
+func webHandler(w http.ResponseWriter, r *http.Request) {
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 	switch r.Method {
 	case "GET":
-		base := filepath.Join("templates", "base.html.tmpl")
-		content := filepath.Join("templates", "apic.html.tmpl")
-		var tmpl = template.Must(template.ParseFiles(base, content))
-		if err := tmpl.Execute(w, cfg.APIC); err != nil {
+		if err := webTemplate.Execute(w, cfg); err != nil {
 			log.Println(err)
 		}
 	case "POST":
 		r.ParseForm()
 		vals := r.PostForm
-		url := vals["url"]
-		user := vals["username"]
-		pass := vals["password"]
-		cfg.APIC.URL = url[0]
-		cfg.APIC.Username = user[0]
-		cfg.APIC.Password = pass[0]
+		if len(vals["apicSubmit"]) > 0 {
+			cfg.APIC.URL = vals["url"][0]
+			cfg.APIC.Username = vals["username"][0]
+			cfg.APIC.Password = vals["password"][0]
+		}
+		if len(vals["fabricMembershipSubmit"]) > 0 {
+			var ns []config.Node
+			for i := 0; i < len(vals["name"]); i++ {
+				ns = append(ns, config.Node{
+					ID:     vals["id"][i],
+					Name:   vals["name"][i],
+					Pod:    vals["pod"][i],
+					Serial: vals["serial"][i],
+					Role:   vals["role"][i],
+				})
+			}
+			cfg.Nodes = ns
+		}
 
 		b, err := toml.Marshal(cfg)
 		if err != nil {
@@ -83,39 +78,11 @@ func apicHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		base := filepath.Join("templates", "base.html.tmpl")
-		content := filepath.Join("templates", "apic.html.tmpl")
-		var tmpl = template.Must(template.ParseFiles(base, content))
-		if err := tmpl.Execute(w, cfg.APIC); err != nil {
+		if err := webTemplate.Execute(w, cfg); err != nil {
 			log.Println(err)
 		}
 	}
-}
 
-func fabricMembershipHandler(w http.ResponseWriter, r *http.Request) {
-	cfg, err := config.New()
-	if err != nil {
-		log.Fatal(err)
-	}
-	base := filepath.Join("templates", "base.html.tmpl")
-	content := filepath.Join("templates", "fabric_membership.html.tmpl")
-	var tmpl = template.Must(template.ParseFiles(base, content))
-	if err := tmpl.Execute(w, cfg.Nodes); err != nil {
-		log.Println(err)
-	}
-}
-
-func geolocationHandler(w http.ResponseWriter, r *http.Request) {
-	cfg, err := config.New()
-	if err != nil {
-		log.Fatal(err)
-	}
-	base := filepath.Join("templates", "base.html.tmpl")
-	content := filepath.Join("templates", "geolocation.html.tmpl")
-	var tmpl = template.Must(template.ParseFiles(base, content))
-	if err := tmpl.Execute(w, cfg.Sites); err != nil {
-		log.Println(err)
-	}
 }
 
 func init() {
