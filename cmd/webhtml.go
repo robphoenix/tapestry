@@ -82,43 +82,42 @@ body {
                 <h2>Geolocation</h2>
             </a>
             <form method="POST">
-		<p>{{.Sites}}</p>
-                {{- range .Sites}}
+                {{- range $si, $se := .Sites}}
                 <div class="site">
                     <label>Site Name:</label>
-                    <input class="geolocationInput" type="text" value="{{.Name}}" name="name" readonly>
+                    <input class="geolocationInput" type="text" value="{{$se.Name}}" name="Sites.{{$si}}.Name" readonly>
                     <label>Description:</label>
-                    <input class="geolocationInput" type="text" value="{{.Description}}" name="name" readonly>
-                        {{- range .Buildings}}
+                    <input class="geolocationInput" type="text" value="{{$se.Description}}" name="Sites.{{$si}}.Description" readonly>
+                {{- range $bi, $be := $se.Buildings}}
                     <div class="building">
                         <label>Building Name:</label>
-                        <input class="geolocationInput" type="text" value="{{.Name}}" name="name" readonly>
+                        <input class="geolocationInput" type="text" value="{{$be.Name}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Name" readonly>
                         <label>Description:</label>
-                        <input class="geolocationInput" type="text" value="{{.Description}}" name="name" readonly>
-                        {{- range .Floors}}
+                        <input class="geolocationInput" type="text" value="{{$be.Description}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Description" readonly>
+                {{- range $fi, $fe := $be.Floors}}
                         <div class="floor">
                             <label>Floor Name:</label>
-                            <input class="geolocationInput" type="text" value="{{.Name}}" name="name" readonly>
+                            <input class="geolocationInput" type="text" value="{{$fe.Name}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Name" readonly>
                             <label>Description:</label>
-                            <input class="geolocationInput" type="text" value="{{.Description}}" name="name" readonly>
-                        {{- range .Rooms}}
+                            <input class="geolocationInput" type="text" value="{{$fe.Description}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Description" readonly>
+                {{- range $rmi, $rme := $fe.Rooms}}
                             <div class="room">
                                 <label>Room Name:</label>
-                                <input class="geolocationInput" type="text" value="{{.Name}}" name="name" readonly>
+                                <input class="geolocationInput" type="text" value="{{$rme.Name}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Rooms.{{$rmi}}.Name" readonly>
                                 <label>Description:</label>
-                                <input class="geolocationInput" type="text" value="{{.Description}}" name="name" readonly>
-                        {{- range .Rows}}
+                                <input class="geolocationInput" type="text" value="{{$rme.Description}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Rooms.{{$rmi}}.Description" readonly>
+                {{- range $rwi, $rwe := $rme.Rows}}
                                 <div class="row">
                                     <label>Row Name:</label>
-                                    <input class="geolocationInput" type="text" value="{{.Name}}" name="name" readonly>
+                                    <input class="geolocationInput" type="text" value="{{$rwe.Name}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Rooms.{{$rmi}}.Rows.{{$rwi}}.Name" readonly>
                                     <label>Description:</label>
-                                    <input class="geolocationInput" type="text" value="{{.Description}}" name="name" readonly>
-                        {{- range .Racks}}
+                                    <input class="geolocationInput" type="text" value="{{$rwe.Description}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Rooms.{{$rmi}}.Rows.{{$rwi}}.Description" readonly>
+                {{- range $rki, $rke := $rwe.Racks}}
                                     <div class="rack">
                                         <label>Rack Name:</label>
-                                        <input class="geolocationInput" type="text" value="{{.Name}}" name="rackName" readonly>
+                                        <input class="geolocationInput" type="text" value="{{$rke.Name}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Rooms.{{$rmi}}.Rows.{{$rwi}}.Racks.{{$rki}}.Name" readonly>
                                         <label>Description:</label>
-                                        <input class="geolocationInput" type="text" value="{{.Description}}" name="rackDescription" readonly>
+                                        <input class="geolocationInput" type="text" value="{{$rke.Description}}" name="Sites.{{$si}}.Buildings.{{$bi}}.Floors.{{$fi}}.Rooms.{{$rmi}}.Rows.{{$rwi}}.Racks.{{$rki}}.Description" readonly>
                                     </div>
                                     {{- end}}
                                 </div>
