@@ -6,7 +6,7 @@
 
 [[nodes]]
   id = "901"
-  name = "differnet"
+  name = "spine-901"
   pod = "1"
   role = "spine"
   serial = "ABC2002W1XF"
@@ -48,7 +48,7 @@
 
 [[nodes]]
   id = "115"
-  name = "also-diff"
+  name = "leaf-115"
   pod = "1"
   role = "leaf"
   serial = "ABC1952R531"
