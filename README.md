@@ -1,2 +1,3 @@
-# tapestry
-Weave a Cisco ACI fabric
+# ![tapestry](/logo.png)
+
+> Weave your Cisco ACI fabric
