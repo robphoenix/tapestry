@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"log"
 
-	set "github.com/deckarep/golang-set"
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/config"
+	"github.com/robphoenix/tapestry/diff"
 	"github.com/spf13/cobra"
 )
 
@@ -73,12 +73,6 @@ func runPlan(cmd *cobra.Command, args []string) {
 		wantNodes = append(wantNodes, n)
 	}
 
-	fmt.Printf("Desired Nodes\n=====\n\n")
-	for _, n := range wantNodes {
-		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name(), n.ID(), n.Serial())
-	}
-	fmt.Printf("\n")
-
 	// actual node state
 	nodes, err := client.FabricMembership.List(ctx)
 	if err != nil {
@@ -92,58 +86,19 @@ func runPlan(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// print actual nodes
-	fmt.Printf("Actual Nodes\n=====\n\n")
-	for _, n := range gotNodes {
-		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name(), n.ID(), n.Serial())
-	}
-	fmt.Printf("\n")
+	add, delete := diff.CompareNodes(wantNodes, gotNodes)
 
-	var wi []interface{}
-	var gi []interface{}
-
-	for _, v := range wantNodes {
-		wi = append(wi, v)
-	}
-	for _, v := range gotNodes {
-		gi = append(gi, v)
-	}
-
-	want := set.NewSetFromSlice(wi)
-	got := set.NewSetFromSlice(gi)
-	result1 := want.Difference(got)
-	result2 := got.Difference(want)
-
-	it1 := result1.Iterator()
-	it2 := result2.Iterator()
-
-	var add []*aci.Node
-	var delete []*aci.Node
-
-	for elem := range it1.C {
-		e := elem.(*aci.Node)
-		add = append(add, e)
-	}
-	for elem := range it2.C {
-		e := elem.(*aci.Node)
-		delete = append(delete, e)
-	}
-
-	fmt.Println("Add")
+	fmt.Printf("Nodes to Add\n")
+	fmt.Printf("============\n\n")
 	for _, v := range add {
-		fmt.Printf("v = %+v\n", v)
+		fmt.Printf("%+v\n", v)
 	}
-	fmt.Println("Delete")
+	fmt.Println("")
+	fmt.Printf("Nodes to Delete\n")
+	fmt.Printf("===============\n\n")
 	for _, v := range delete {
-		fmt.Printf("v = %+v\n", v)
+		fmt.Printf("%+v\n", v)
 	}
-
-	//TODO diff desired & actual
-
-	//         // summary
-	//         fmt.Printf("\nSummary\n=======\n\n")
-	//         fmt.Printf("Nodes: %d to delete, %d to create\n", len(nodeActions.Delete), len(nodeActions.Create))
-	//         fmt.Printf("Tenants: %d to delete, %d to create\n", len(tenantActions.Delete), len(tenantActions.Create))
 }
 
 func init() {
