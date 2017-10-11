@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"log"
 
+	set "github.com/deckarep/golang-set"
 	"github.com/robphoenix/go-aci/aci"
 	"github.com/robphoenix/tapestry/config"
 	"github.com/spf13/cobra"
@@ -97,6 +98,45 @@ func runPlan(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s\t[ID: %s Serial: %s]\n", n.Name(), n.ID(), n.Serial())
 	}
 	fmt.Printf("\n")
+
+	var wi []interface{}
+	var gi []interface{}
+
+	for _, v := range wantNodes {
+		wi = append(wi, v)
+	}
+	for _, v := range gotNodes {
+		gi = append(gi, v)
+	}
+
+	want := set.NewSetFromSlice(wi)
+	got := set.NewSetFromSlice(gi)
+	result1 := want.Difference(got)
+	result2 := got.Difference(want)
+
+	it1 := result1.Iterator()
+	it2 := result2.Iterator()
+
+	var add []*aci.Node
+	var delete []*aci.Node
+
+	for elem := range it1.C {
+		e := elem.(*aci.Node)
+		add = append(add, e)
+	}
+	for elem := range it2.C {
+		e := elem.(*aci.Node)
+		delete = append(delete, e)
+	}
+
+	fmt.Println("Add")
+	for _, v := range add {
+		fmt.Printf("v = %+v\n", v)
+	}
+	fmt.Println("Delete")
+	for _, v := range delete {
+		fmt.Printf("v = %+v\n", v)
+	}
 
 	//TODO diff desired & actual
 
