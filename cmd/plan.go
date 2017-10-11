@@ -88,16 +88,23 @@ func runPlan(cmd *cobra.Command, args []string) {
 
 	add, delete := diff.CompareNodes(wantNodes, gotNodes)
 
-	fmt.Printf("Nodes to Add\n")
-	fmt.Printf("============\n\n")
-	for _, v := range add {
-		fmt.Printf("%+v\n", v)
+	if len(add) == 0 && len(delete) == 0 {
+		fmt.Println("No changes to be made")
 	}
-	fmt.Println("")
-	fmt.Printf("Nodes to Delete\n")
-	fmt.Printf("===============\n\n")
-	for _, v := range delete {
-		fmt.Printf("%+v\n", v)
+	if len(delete) > 0 {
+		fmt.Printf("Nodes to Delete\n")
+		fmt.Printf("===============\n\n")
+		for _, v := range delete {
+			fmt.Printf("%+v\n", v)
+		}
+		fmt.Println("")
+	}
+	if len(add) > 0 {
+		fmt.Printf("Nodes to Add\n")
+		fmt.Printf("============\n\n")
+		for _, v := range add {
+			fmt.Printf("%+v\n", v)
+		}
 	}
 }
 
